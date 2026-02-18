@@ -11,26 +11,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-
     <script src="script.js" defer></script>
 </head>
 
 <body>
     <p class="card-title">kraken trading cards</p>
 
+    <!-- ─── Card ─────────────────────────────────────────────── -->
     <main class="card-container" id="cardContainer">
         <div class="card" id="card">
-            <div class="card-face">
+            <div class="card-face" id="cardFace">
                 <!-- Base: portrait photo -->
-                <img src="./card.png" alt="Emory – Personal AI Assistant" class="card-image">
+                <img src="./card.png" alt="Emory – Personal AI Assistant" class="card-image" id="cardImage">
 
-                <!-- Pattern holo — sits below mask overlay (z-index: 1) -->
+                <!-- Pattern holo — default z-index: 1, below mask -->
                 <div class="card-pattern" id="cardPattern"></div>
 
-                <!-- Mask overlay — rendered visibly so text/border/logo show -->
+                <!-- Mask overlay -->
                 <img src="./mask.png" alt="" class="card-mask" id="cardMaskOverlay" aria-hidden="true">
 
-                <!-- Holo effects sit ON TOP of mask, only visible where mask is white -->
+                <!-- Holo effects -->
                 <div class="card-holo" id="cardHolo"></div>
                 <div class="card-sparkle" id="cardSparkle"></div>
                 <div class="card-shine"></div>
@@ -42,31 +42,153 @@
         </div>
     </main>
 
-    <!-- Controls -->
-    <div class="controls" id="controls">
-        <!-- Mask selector -->
+    <!-- ─── Editor Panel ──────────────────────────────────────── -->
+    <aside class="editor" id="editor">
 
-
-        <!-- Blend mode selector -->
-        <div class="control-group">
-            <span class="control-label">blend</span>
-            <div class="pill-group" id="blendPills">
-                <button class="pill active" data-blend="screen" id="pill-screen">screen</button>
-                <button class="pill" data-blend="color-dodge" id="pill-dodge">dodge</button>
-                <button class="pill" data-blend="overlay" id="pill-overlay">overlay</button>
-                <button class="pill" data-blend="hard-light" id="pill-hard">hard</button>
-            </div>
-        </div>
-
-        <!-- Tilt toggle -->
-        <div class="control-group">
-            <span class="control-label">tilt</span>
-            <button class="toggle-btn active" id="tiltToggle">
-                <span class="toggle-dot"></span>
-                <span class="toggle-text">on</span>
+        <div class="editor-header">
+            <span class="editor-title">editor</span>
+            <button class="editor-collapse" id="editorCollapse" title="toggle panel">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </button>
         </div>
-    </div>
+
+        <div class="editor-body" id="editorBody">
+
+            <!-- ── Tilt ─────────────────────────────────────── -->
+            <div class="ed-section">
+                <div class="ed-row">
+                    <span class="ed-label">tilt</span>
+                    <button class="toggle-btn active" id="tiltToggle">
+                        <span class="toggle-dot"></span>
+                        <span class="toggle-text">on</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Layer Order ──────────────────────────────── -->
+            <div class="ed-section">
+                <div class="ed-section-title">layer order</div>
+                <div class="layer-stack" id="layerStack">
+                    <!-- items injected by JS; drag to reorder -->
+                    <div class="layer-item" data-layer="holo">
+                        <span class="layer-drag">⠿</span>
+                        <span class="layer-name">holo</span>
+                        <span class="layer-z" id="zHolo">11</span>
+                    </div>
+                    <div class="layer-item" data-layer="mask">
+                        <span class="layer-drag">⠿</span>
+                        <span class="layer-name">mask</span>
+                        <span class="layer-z" id="zMask">2</span>
+                    </div>
+                    <div class="layer-item" data-layer="pattern">
+                        <span class="layer-drag">⠿</span>
+                        <span class="layer-name">pattern</span>
+                        <span class="layer-z" id="zPattern">1</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Blend Modes ──────────────────────────────── -->
+            <div class="ed-section">
+                <div class="ed-section-title">blend modes</div>
+
+                <!-- mask blend -->
+                <div class="ed-row">
+                    <span class="ed-label">mask</span>
+                    <div class="blend-select-wrap">
+                        <select class="blend-select" id="blendMask">
+                            <option value="screen" selected>screen</option>
+                            <option value="normal">normal</option>
+                            <option value="multiply">multiply</option>
+                            <option value="overlay">overlay</option>
+                            <option value="color-dodge">dodge</option>
+                            <option value="color-burn">burn</option>
+                            <option value="hard-light">hard light</option>
+                            <option value="soft-light">soft light</option>
+                            <option value="difference">difference</option>
+                            <option value="exclusion">exclusion</option>
+                            <option value="luminosity">luminosity</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- pattern blend -->
+                <div class="ed-row">
+                    <span class="ed-label">pattern</span>
+                    <div class="blend-select-wrap">
+                        <select class="blend-select" id="blendPattern">
+                            <option value="screen">screen</option>
+                            <option value="normal">normal</option>
+                            <option value="multiply">multiply</option>
+                            <option value="overlay">overlay</option>
+                            <option value="color-dodge" selected>dodge</option>
+                            <option value="color-burn">burn</option>
+                            <option value="hard-light">hard light</option>
+                            <option value="soft-light">soft light</option>
+                            <option value="difference">difference</option>
+                            <option value="exclusion">exclusion</option>
+                            <option value="luminosity">luminosity</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- holo blend -->
+                <div class="ed-row">
+                    <span class="ed-label">holo</span>
+                    <div class="blend-select-wrap">
+                        <select class="blend-select" id="blendHolo">
+                            <option value="screen" selected>screen</option>
+                            <option value="normal">normal</option>
+                            <option value="multiply">multiply</option>
+                            <option value="overlay">overlay</option>
+                            <option value="color-dodge">dodge</option>
+                            <option value="color-burn">burn</option>
+                            <option value="hard-light">hard light</option>
+                            <option value="soft-light">soft light</option>
+                            <option value="difference">difference</option>
+                            <option value="exclusion">exclusion</option>
+                            <option value="luminosity">luminosity</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── File Upload ──────────────────────────────── -->
+            <div class="ed-section">
+                <div class="ed-section-title">swap images</div>
+
+                <div class="ed-row">
+                    <span class="ed-label">card</span>
+                    <label class="upload-btn" for="uploadCard">
+                        <span class="upload-filename" id="nameCard">card.png</span>
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 7.5V1M2 4.5l3.5-3.5 3.5 3.5M1 9.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </label>
+                    <input type="file" id="uploadCard" accept="image/*" style="display:none">
+                </div>
+
+                <div class="ed-row">
+                    <span class="ed-label">mask</span>
+                    <label class="upload-btn" for="uploadMask">
+                        <span class="upload-filename" id="nameMask">mask.png</span>
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 7.5V1M2 4.5l3.5-3.5 3.5 3.5M1 9.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </label>
+                    <input type="file" id="uploadMask" accept="image/*" style="display:none">
+                </div>
+
+                <div class="ed-row">
+                    <span class="ed-label">pattern</span>
+                    <label class="upload-btn" for="uploadPattern">
+                        <span class="upload-filename" id="namePattern">pattern.png</span>
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 7.5V1M2 4.5l3.5-3.5 3.5 3.5M1 9.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </label>
+                    <input type="file" id="uploadPattern" accept="image/*" style="display:none">
+                </div>
+            </div>
+
+        </div><!-- /editor-body -->
+    </aside>
 
     <p class="hint">Move your cursor over the card</p>
 </body>

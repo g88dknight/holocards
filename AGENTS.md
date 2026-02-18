@@ -70,23 +70,33 @@ holocards/
 - **`tick()`** — `requestAnimationFrame` loop running at 60fps
 - **`lerp(a, b, t)`** — Linear interpolation for smooth transitions
 - **`handlePointerMove(x, y)`** — Normalizes cursor position relative to card center
-- **`applyMask()`** — Applies `mask.png` as CSS mask-image to holo and sparkle layers (not pattern — it sits below the mask)
-- **`applyBlend(mode)`** — Sets mix-blend-mode on holo and sparkle layers; pattern has its own fixed `color-dodge` blend mode
+- **`applyMask(url)`** — Applies mask image (file path or blob URL) to holo/sparkle as CSS mask-image and to the visible overlay `<img>`
+- **`applyBlendModes()`** — Applies per-layer blend modes from `state.blendMask/blendPattern/blendHolo`
+- **`applyZIndex()`** — Sets z-index on mask, pattern, and holo group from `state.zMask/zPattern/zHolo`
+- **`reassignZIndices()`** — Called after drag-reorder; distributes z-indices based on DOM order in layer stack
 - **Idle state** — After 3s of no input, targets return to center (spring-back lerp)
 - **Input priority**: Mouse/touch > DeviceOrientation (gyroscope)
 - **iOS 13+**: Requests `DeviceOrientationEvent.requestPermission()` on first click
 - **Tilt toggle**: Only affects card rotation (`--rotate-x/y`), holo effects always active
 
+### Editor Panel
+The right-side `.editor` panel provides realtime controls:
+- **Tilt toggle** — enable/disable card rotation
+- **Layer order** — drag-to-reorder stack: holo / mask / pattern; z-indices auto-reassigned (step of 10)
+- **Blend modes** — individual `<select>` for mask, pattern, and holo (holo blend also applies to sparkle)
+- **Swap images** — file `<input>` for card.png, mask.png, pattern.png; uses `URL.createObjectURL` for instant preview
+- Panel is collapsible via header click
+
 ### Layout
 - **Title** `.card-title` — fixed position, `top: 50px`, centered horizontally, font-size 18px
 - **Card** — centered in viewport via flexbox
-- **Controls** `.controls` — fixed position, `bottom: 50px`, centered horizontally
+- **Editor** `.editor` — fixed, right side, vertically centered
 - **Hint** `.hint` — fixed `bottom: 16px`, fades in/out over 3s on load
 
 ### Masks & Textures
-- Masks and textures are referenced by **file path** (`url('./mask.png')`, `url('./pattern.png')`) — not embedded as base64 in CSS
-- JS applies mask dynamically via inline styles (`el.style.maskImage = 'url("./mask.png")'`)
-- This approach makes it easy to swap masks/textures in realtime
+- Default assets referenced by file path (`url('./mask.png')`, `url('./pattern.png')`)
+- JS applies mask dynamically via inline styles — supports runtime swap with blob URLs from file upload
+- Pattern texture is rebuilt as a `backgroundImage` string combining rainbow gradient + texture URL
 
 ---
 
@@ -127,7 +137,9 @@ The `vercel.json` sets proper cache headers for assets.
 - **`mix-blend-mode`**: Each layer uses a different blend mode to composite naturally over the photo without harsh overlays
 - **Lerp smoothing**: Instead of directly setting rotation, values are interpolated each frame for a fluid, physical feel
 - **Tilt-independent effects**: Holo effects are always active regardless of tilt toggle state
-- **Pattern below mask**: `pattern.png` sits at z-index: 1 (below the mask overlay), giving it a subtle integrated look with fixed `color-dodge` blend mode and constant opacity 0.35
+- **Pattern below mask (default)**: `pattern.png` starts at z-index: 1 (below mask), but the editor allows free drag-reorder of all three layer groups
+- **Per-layer blend modes**: Each of mask / pattern / holo has its own independent blend mode selector in the editor
+- **File upload as blob URLs**: `URL.createObjectURL` allows instant image swap without any server round-trip
 
 ---
 
