@@ -1,0 +1,285 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --card-width: 320px;
+    --card-height: 448px;
+    --card-radius: 18px;
+    --rotate-x: 0deg;
+    --rotate-y: 0deg;
+    --shine-pos-x: 50%;
+    --shine-pos-y: 50%;
+    --glare-pos-x: 50%;
+    --glare-pos-y: 50%;
+    --glare-opacity: 0;
+    --holo-opacity: 0;
+    --sparkle-opacity: 0;
+    --rainbow-angle: 0deg;
+    --rainbow-pos: 50%;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: radial-gradient(ellipse at center, #0d0d1a 0%, #000005 70%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Ambient background glow that reacts to card tilt */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 40% at var(--glare-pos-x, 50%) var(--glare-pos-y, 50%),
+            rgba(120, 80, 255, 0.08) 0%,
+            transparent 70%);
+    pointer-events: none;
+    transition: background 0.3s ease;
+}
+
+.card-container {
+    perspective: 900px;
+    perspective-origin: 50% 50%;
+    position: relative;
+}
+
+/* Outer glow shadow */
+.card-container::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 40px;
+    background: radial-gradient(ellipse, rgba(100, 60, 255, 0.35) 0%, transparent 70%);
+    filter: blur(15px);
+    border-radius: 50%;
+    transition: opacity 0.3s ease;
+}
+
+.card {
+    width: var(--card-width);
+    height: var(--card-height);
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg));
+    transition: transform 0.08s ease-out;
+    border-radius: var(--card-radius);
+    cursor: pointer;
+    will-change: transform;
+}
+
+.card.is-resting {
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ─── Card Face ─────────────────────────────────────────────── */
+.card-face {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    transform: translateZ(0);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(80, 40, 200, 0.15);
+}
+
+/* ─── Card Image ─────────────────────────────────────────────── */
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--card-radius);
+}
+
+/* ─── Holographic Rainbow Layer ──────────────────────────────── */
+.card-holo {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--card-radius);
+    z-index: 2;
+    background-image:
+        repeating-linear-gradient(var(--rainbow-angle, 0deg),
+            hsla(0, 100%, 60%, 0.15) 0%,
+            hsla(30, 100%, 60%, 0.15) 4%,
+            hsla(60, 100%, 60%, 0.15) 8%,
+            hsla(90, 100%, 60%, 0.15) 12%,
+            hsla(120, 100%, 60%, 0.15) 16%,
+            hsla(150, 100%, 60%, 0.15) 20%,
+            hsla(180, 100%, 60%, 0.15) 24%,
+            hsla(210, 100%, 60%, 0.15) 28%,
+            hsla(240, 100%, 60%, 0.15) 32%,
+            hsla(270, 100%, 60%, 0.15) 36%,
+            hsla(300, 100%, 60%, 0.15) 40%,
+            hsla(330, 100%, 60%, 0.15) 44%,
+            hsla(360, 100%, 60%, 0.15) 48%,
+            transparent 52%,
+            transparent 100%),
+        radial-gradient(ellipse 80% 80% at var(--shine-pos-x, 50%) var(--shine-pos-y, 50%),
+            rgba(255, 255, 255, 0.12) 0%,
+            transparent 60%);
+    background-size: 200% 200%, 100% 100%;
+    background-position: var(--rainbow-pos, 50%) var(--rainbow-pos, 50%), center;
+    mix-blend-mode: color-dodge;
+    opacity: var(--holo-opacity, 0);
+    transition: opacity 0.3s ease;
+
+    /* Mask to the card art area only */
+    -webkit-mask-image: url("./mask.png");
+    mask-image: url("./mask.png");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+/* ─── Sparkle / Glitter Layer ────────────────────────────────── */
+.card-sparkle {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--card-radius);
+    z-index: 3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='560'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='560' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    background-size: cover;
+    mix-blend-mode: color-dodge;
+    opacity: var(--sparkle-opacity, 0);
+    transition: opacity 0.3s ease;
+    -webkit-mask-image: url("./mask.png");
+    mask-image: url("./mask.png");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+}
+
+/* ─── Shine Sweep Layer ──────────────────────────────────────── */
+.card-shine {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--card-radius);
+    z-index: 4;
+    background: linear-gradient(115deg,
+            transparent 25%,
+            rgba(255, 255, 255, 0.08) 35%,
+            rgba(255, 255, 255, 0.25) 45%,
+            rgba(200, 180, 255, 0.20) 50%,
+            rgba(100, 220, 255, 0.15) 55%,
+            rgba(255, 255, 255, 0.08) 65%,
+            transparent 75%);
+    background-size: 250% 250%;
+    background-position: var(--shine-pos-x, 50%) var(--shine-pos-y, 50%);
+    mix-blend-mode: soft-light;
+    opacity: 0.9;
+}
+
+/* ─── Glare (specular highlight) ─────────────────────────────── */
+.card-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--card-radius);
+    z-index: 5;
+    background: radial-gradient(farthest-corner ellipse at var(--glare-pos-x, 50%) var(--glare-pos-y, 50%),
+            rgba(255, 255, 255, 0.55) 0%,
+            rgba(255, 255, 255, 0.15) 25%,
+            rgba(255, 255, 255, 0) 55%);
+    opacity: var(--glare-opacity, 0);
+    mix-blend-mode: overlay;
+    transition: opacity 0.15s ease;
+}
+
+/* ─── Card Edge Rim Light ────────────────────────────────────── */
+.card-rim {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--card-radius);
+    z-index: 6;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+}
+
+/* ─── Idle Float Animation ───────────────────────────────────── */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px) rotateX(2deg) rotateY(-2deg);
+    }
+
+    25% {
+        transform: translateY(-8px) rotateX(-2deg) rotateY(3deg);
+    }
+
+    50% {
+        transform: translateY(-4px) rotateX(3deg) rotateY(-1deg);
+    }
+
+    75% {
+        transform: translateY(-10px) rotateX(-1deg) rotateY(-3deg);
+    }
+}
+
+@keyframes holoIdle {
+
+    0%,
+    100% {
+        --holo-opacity: 0.05;
+        --sparkle-opacity: 0.04;
+    }
+
+    50% {
+        --holo-opacity: 0.12;
+        --sparkle-opacity: 0.08;
+    }
+}
+
+.card.is-idle {
+    animation: float 8s ease-in-out infinite;
+    transition: none;
+}
+
+/* ─── Hint text ──────────────────────────────────────────────── */
+.hint {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    pointer-events: none;
+    user-select: none;
+    animation: hintFade 3s ease-in-out 1.5s forwards;
+    opacity: 0;
+}
+
+@keyframes hintFade {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(4px);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
