@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="masks.js"></script>
     <script src="script.js" defer></script>
 </head>
 
@@ -24,19 +25,53 @@
                 <img src="./card.png" alt="Emory – Personal AI Assistant" class="card-image">
 
                 <!-- Mask overlay — rendered visibly so text/border/logo show -->
-                <img src="./mask.png" alt="" class="card-mask" aria-hidden="true">
+                <img src="./mask.png" alt="" class="card-mask" id="cardMaskOverlay" aria-hidden="true">
 
                 <!-- Holo effects sit ON TOP of mask, only visible where mask is white -->
-                <div class="card-holo"></div>
-                <div class="card-sparkle"></div>
+                <div class="card-holo" id="cardHolo"></div>
+                <div class="card-sparkle" id="cardSparkle"></div>
                 <div class="card-shine"></div>
                 <div class="card-glare"></div>
 
-                <!-- Rim light on top of everything -->
+                <!-- Rim light -->
                 <div class="card-rim"></div>
             </div>
         </div>
     </main>
+
+    <!-- Controls -->
+    <div class="controls" id="controls">
+        <!-- Mask selector -->
+        <div class="control-group">
+            <span class="control-label">mask</span>
+            <div class="pill-group" id="maskPills">
+                <button class="pill active" data-mask="mask" id="pill-mask">card</button>
+                <button class="pill" data-mask="mask02" id="pill-mask02">pattern</button>
+                <button class="pill" data-mask="mask03" id="pill-mask03">inverted</button>
+            </div>
+        </div>
+
+        <!-- Blend mode selector -->
+        <div class="control-group">
+            <span class="control-label">blend</span>
+            <div class="pill-group" id="blendPills">
+                <button class="pill active" data-blend="screen" id="pill-screen">screen</button>
+                <button class="pill" data-blend="color-dodge" id="pill-dodge">dodge</button>
+                <button class="pill" data-blend="overlay" id="pill-overlay">overlay</button>
+                <button class="pill" data-blend="hard-light" id="pill-hard">hard</button>
+            </div>
+        </div>
+
+        <!-- Tilt toggle -->
+        <div class="control-group">
+            <span class="control-label">tilt</span>
+            <button class="toggle-btn active" id="tiltToggle">
+                <span class="toggle-dot"></span>
+                <span class="toggle-text">on</span>
+            </button>
+        </div>
+    </div>
+
     <p class="hint">Move your cursor over the card</p>
 </body>
 

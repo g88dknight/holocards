@@ -1,16 +1,19 @@
 // ─── Element References ───────────────────────────────────────────────────────
 const card = document.getElementById('card');
-const cardContainer = document.getElementById('cardContainer');
+const cardHolo = document.getElementById('cardHolo');
+const cardSparkle = document.getElementById('cardSparkle');
+const maskOverlay = document.getElementById('cardMaskOverlay');
+const tiltToggle = document.getElementById('tiltToggle');
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 const CONFIG = {
-    MAX_ROTATION: 18,       // Max tilt in degrees
-    IDLE_TIMEOUT: 3000,     // ms before returning to center when no input
-    SMOOTHING: 0.12,        // Lerp factor (lower = smoother/slower)
-    SPRING_BACK: 0.08,      // Return-to-center speed when no input
+    MAX_ROTATION: 18,
+    IDLE_TIMEOUT: 3000,
+    SMOOTHING: 0.12,
+    SPRING_BACK: 0.08,
 };
 
-// ─── State ────────────────────────────────────────────────────────────────────
+// ─── App State ────────────────────────────────────────────────────────────────
 let state = {
     targetRotX: 0,
     targetRotY: 0,
@@ -21,17 +24,52 @@ let state = {
     currentGlareX: 50,
     currentGlareY: 50,
     isHovering: false,
+    tiltEnabled: true,
     idleTimer: null,
+    gyroIdleTimer: null,
     rafId: null,
+    currentMask: 'mask',
+    currentBlend: 'screen',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function lerp(a, b, t) {
-    return a + (b - a) * t;
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+// ─── Mask & Blend Application ─────────────────────────────────────────────────
+function applyMask(maskKey) {
+    const dataUrl = MASK_DATA[maskKey];
+    if (!dataUrl) return;
+
+    // Update visible overlay src
+    maskOverlay.src = dataUrl;
+
+    // Update CSS mask-image on holo layers
+    const maskCss = `url("${dataUrl}")`;
+    [cardHolo, cardSparkle].forEach(el => {
+        el.style.webkitMaskImage = maskCss;
+        el.style.maskImage = maskCss;
+        el.style.webkitMaskSize = '100% 100%';
+        el.style.maskSize = '100% 100%';
+    });
+
+    // For mask02 (white bg, black pattern) the overlay needs multiply
+    // to make white areas transparent. For mask/mask03 (black bg, white elements)
+    // screen works correctly.
+    if (maskKey === 'mask02') {
+        maskOverlay.style.mixBlendMode = 'multiply';
+    } else {
+        maskOverlay.style.mixBlendMode = 'screen';
+    }
+
+    state.currentMask = maskKey;
 }
 
-function clamp(val, min, max) {
-    return Math.max(min, Math.min(max, val));
+function applyBlend(blendMode) {
+    [cardHolo, cardSparkle].forEach(el => {
+        el.style.mixBlendMode = blendMode;
+    });
+    state.currentBlend = blendMode;
 }
 
 // ─── Core Update ──────────────────────────────────────────────────────────────
@@ -47,8 +85,7 @@ function applyCardState(rotX, rotY, glareX, glareY, intensity) {
     card.style.setProperty('--glare-pos-x', `${glareX}%`);
     card.style.setProperty('--glare-pos-y', `${glareY}%`);
 
-    const distance = Math.sqrt(rotX * rotX + rotY * rotY);
-    const glareOpacity = clamp(distance / CONFIG.MAX_ROTATION, 0, 1) * 0.85;
+    const glareOpacity = clamp(Math.sqrt(rotX * rotX + rotY * rotY) / CONFIG.MAX_ROTATION, 0, 1) * 0.85;
     card.style.setProperty('--glare-opacity', glareOpacity.toFixed(3));
 
     const rainbowAngle = 135 + (rotY / CONFIG.MAX_ROTATION) * 30;
@@ -71,24 +108,14 @@ function tick() {
     state.currentGlareX = lerp(state.currentGlareX, state.targetGlareX, smoothing);
     state.currentGlareY = lerp(state.currentGlareY, state.targetGlareY, smoothing);
 
-    const dist = Math.sqrt(
-        state.currentRotX * state.currentRotX +
-        state.currentRotY * state.currentRotY
-    );
+    const dist = Math.sqrt(state.currentRotX ** 2 + state.currentRotY ** 2);
     const intensity = clamp(dist / CONFIG.MAX_ROTATION, 0, 1);
 
-    applyCardState(
-        state.currentRotX,
-        state.currentRotY,
-        state.currentGlareX,
-        state.currentGlareY,
-        intensity
-    );
-
+    applyCardState(state.currentRotX, state.currentRotY, state.currentGlareX, state.currentGlareY, intensity);
     state.rafId = requestAnimationFrame(tick);
 }
 
-// ─── Return to center after inactivity ────────────────────────────────────────
+// ─── Return to center ─────────────────────────────────────────────────────────
 function resetIdleTimer() {
     if (state.idleTimer) clearTimeout(state.idleTimer);
     state.idleTimer = setTimeout(returnToCenter, CONFIG.IDLE_TIMEOUT);
@@ -102,25 +129,19 @@ function returnToCenter() {
     state.targetGlareY = 50;
 }
 
-// ─── Input Handling ───────────────────────────────────────────────────────────
+// ─── Pointer Input ────────────────────────────────────────────────────────────
 function handlePointerMove(clientX, clientY) {
+    if (!state.tiltEnabled) return;
     const rect = card.getBoundingClientRect();
-    const cardCenterX = rect.left + rect.width / 2;
-    const cardCenterY = rect.top + rect.height / 2;
-
-    const normX = clamp((clientX - cardCenterX) / (rect.width / 2), -1, 1);
-    const normY = clamp((clientY - cardCenterY) / (rect.height / 2), -1, 1);
-
+    const normX = clamp((clientX - rect.left - rect.width / 2) / (rect.width / 2), -1, 1);
+    const normY = clamp((clientY - rect.top - rect.height / 2) / (rect.height / 2), -1, 1);
     state.targetRotY = normX * CONFIG.MAX_ROTATION;
     state.targetRotX = -normY * CONFIG.MAX_ROTATION;
-
     state.targetGlareX = clamp(((clientX - rect.left) / rect.width) * 100, 0, 100);
     state.targetGlareY = clamp(((clientY - rect.top) / rect.height) * 100, 0, 100);
-
     resetIdleTimer();
 }
 
-// ─── Mouse Events ─────────────────────────────────────────────────────────────
 document.addEventListener('mousemove', (e) => {
     state.isHovering = true;
     handlePointerMove(e.clientX, e.clientY);
@@ -131,7 +152,6 @@ document.addEventListener('mouseleave', () => {
     returnToCenter();
 });
 
-// ─── Touch Events ─────────────────────────────────────────────────────────────
 document.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const touch = e.touches[0];
@@ -144,64 +164,73 @@ document.addEventListener('touchend', () => {
     returnToCenter();
 });
 
-// ─── Device Orientation (Mobile Gyroscope) ────────────────────────────────────
-// Tracks last gyro event time to detect when device stops moving
-let lastGyroTime = 0;
-let gyroIdleTimer = null;
-
+// ─── Device Orientation ───────────────────────────────────────────────────────
 function handleOrientation(e) {
-    if (state.isHovering) return; // Mouse/touch takes priority
-
+    if (state.isHovering || !state.tiltEnabled) return;
     const rotY = clamp(e.gamma ?? 0, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
     const rotX = clamp((e.beta ?? 0) - 30, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
-
     state.targetRotY = rotY;
     state.targetRotX = -rotX;
     state.targetGlareX = 50 + (rotY / CONFIG.MAX_ROTATION) * 40;
     state.targetGlareY = 50 - (rotX / CONFIG.MAX_ROTATION) * 40;
 
-    // Reset return-to-center timer on every gyro event
-    lastGyroTime = Date.now();
-    if (gyroIdleTimer) clearTimeout(gyroIdleTimer);
-    gyroIdleTimer = setTimeout(() => {
-        // No gyro movement for 3s → spring back to center
-        returnToCenter();
-    }, CONFIG.IDLE_TIMEOUT);
+    if (state.gyroIdleTimer) clearTimeout(state.gyroIdleTimer);
+    state.gyroIdleTimer = setTimeout(returnToCenter, CONFIG.IDLE_TIMEOUT);
 }
 
 function setupDeviceOrientation() {
     window.addEventListener('deviceorientation', handleOrientation);
 }
 
-// iOS 13+ requires a user gesture to grant DeviceOrientationEvent permission.
-// We try to set up immediately (works on Android + older iOS).
-// On iOS 13+, we also attach a one-time click handler as fallback.
 if (typeof DeviceOrientationEvent !== 'undefined') {
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iOS 13+ — try immediately first (will silently fail without gesture),
-        // then also try on first user interaction as fallback
         DeviceOrientationEvent.requestPermission()
-            .then(permission => {
-                if (permission === 'granted') setupDeviceOrientation();
-            })
+            .then(p => { if (p === 'granted') setupDeviceOrientation(); })
             .catch(() => {
-                // Permission requires gesture — attach to first touch/click
-                const requestOnGesture = async () => {
+                const req = async () => {
                     try {
-                        const permission = await DeviceOrientationEvent.requestPermission();
-                        if (permission === 'granted') setupDeviceOrientation();
-                    } catch (err) {
-                        console.warn('DeviceOrientation permission denied:', err);
-                    }
+                        const p = await DeviceOrientationEvent.requestPermission();
+                        if (p === 'granted') setupDeviceOrientation();
+                    } catch (err) { }
                 };
-                document.addEventListener('touchstart', requestOnGesture, { once: true });
-                document.addEventListener('click', requestOnGesture, { once: true });
+                document.addEventListener('touchstart', req, { once: true });
+                document.addEventListener('click', req, { once: true });
             });
     } else {
-        // Android / non-iOS — works without permission
         setupDeviceOrientation();
     }
 }
 
-// ─── Start ────────────────────────────────────────────────────────────────────
+// ─── Controls: Mask Switcher ──────────────────────────────────────────────────
+document.getElementById('maskPills').addEventListener('click', (e) => {
+    const btn = e.target.closest('.pill');
+    if (!btn) return;
+    const maskKey = btn.dataset.mask;
+    document.querySelectorAll('#maskPills .pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    applyMask(maskKey);
+});
+
+// ─── Controls: Blend Mode Switcher ───────────────────────────────────────────
+document.getElementById('blendPills').addEventListener('click', (e) => {
+    const btn = e.target.closest('.pill');
+    if (!btn) return;
+    const blend = btn.dataset.blend;
+    document.querySelectorAll('#blendPills .pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    applyBlend(blend);
+});
+
+// ─── Controls: Tilt Toggle ────────────────────────────────────────────────────
+tiltToggle.addEventListener('click', () => {
+    state.tiltEnabled = !state.tiltEnabled;
+    tiltToggle.classList.toggle('active', state.tiltEnabled);
+    tiltToggle.querySelector('.toggle-text').textContent = state.tiltEnabled ? 'on' : 'off';
+    if (!state.tiltEnabled) returnToCenter();
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+// Apply initial mask via JS (uses base64 from masks.js)
+applyMask('mask');
+applyBlend('screen');
 tick();
