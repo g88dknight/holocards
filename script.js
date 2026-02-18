@@ -37,9 +37,8 @@ function lerp(a, b, t) { return a + (b - a) * t; }
 function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
 
 // ─── Mask & Blend Application ─────────────────────────────────────────────────
-function applyMask(maskKey) {
-    const dataUrl = MASK_DATA[maskKey];
-    if (!dataUrl) return;
+function applyMask() {
+    const dataUrl = './mask.png';
 
     // Update visible overlay src
     maskOverlay.src = dataUrl;
@@ -53,16 +52,8 @@ function applyMask(maskKey) {
         el.style.maskSize = '100% 100%';
     });
 
-    // For mask02 (white bg, black pattern) the overlay needs multiply
-    // to make white areas transparent. For mask/mask03 (black bg, white elements)
-    // screen works correctly.
-    if (maskKey === 'mask02') {
-        maskOverlay.style.mixBlendMode = 'multiply';
-    } else {
-        maskOverlay.style.mixBlendMode = 'screen';
-    }
-
-    state.currentMask = maskKey;
+    // Ensure screen blend mode for mask.png
+    maskOverlay.style.mixBlendMode = 'screen';
 }
 
 function applyBlend(blendMode) {
@@ -74,8 +65,12 @@ function applyBlend(blendMode) {
 
 // ─── Core Update ──────────────────────────────────────────────────────────────
 function applyCardState(rotX, rotY, glareX, glareY, intensity) {
-    card.style.setProperty('--rotate-x', `${rotX}deg`);
-    card.style.setProperty('--rotate-y', `${rotY}deg`);
+    // Only apply physical tilt if enabled
+    const cssRotX = state.tiltEnabled ? rotX : 0;
+    const cssRotY = state.tiltEnabled ? rotY : 0;
+
+    card.style.setProperty('--rotate-x', `${cssRotX}deg`);
+    card.style.setProperty('--rotate-y', `${cssRotY}deg`);
 
     const shinePosX = 50 + (rotY / CONFIG.MAX_ROTATION) * 40;
     const shinePosY = 50 - (rotX / CONFIG.MAX_ROTATION) * 40;
@@ -131,7 +126,7 @@ function returnToCenter() {
 
 // ─── Pointer Input ────────────────────────────────────────────────────────────
 function handlePointerMove(clientX, clientY) {
-    if (!state.tiltEnabled) return;
+    // Always calculate targets so effects update even if tilt is off
     const rect = card.getBoundingClientRect();
     const normX = clamp((clientX - rect.left - rect.width / 2) / (rect.width / 2), -1, 1);
     const normY = clamp((clientY - rect.top - rect.height / 2) / (rect.height / 2), -1, 1);
@@ -166,7 +161,9 @@ document.addEventListener('touchend', () => {
 
 // ─── Device Orientation ───────────────────────────────────────────────────────
 function handleOrientation(e) {
-    if (state.isHovering || !state.tiltEnabled) return;
+    if (state.isHovering) return;
+    // Always calculate targets
+
     const rotY = clamp(e.gamma ?? 0, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
     const rotX = clamp((e.beta ?? 0) - 30, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
     state.targetRotY = rotY;
@@ -201,15 +198,7 @@ if (typeof DeviceOrientationEvent !== 'undefined') {
     }
 }
 
-// ─── Controls: Mask Switcher ──────────────────────────────────────────────────
-document.getElementById('maskPills').addEventListener('click', (e) => {
-    const btn = e.target.closest('.pill');
-    if (!btn) return;
-    const maskKey = btn.dataset.mask;
-    document.querySelectorAll('#maskPills .pill').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    applyMask(maskKey);
-});
+// ─── Controls: Mask Switcher removed ──────────────────────────────────────────
 
 // ─── Controls: Blend Mode Switcher ───────────────────────────────────────────
 document.getElementById('blendPills').addEventListener('click', (e) => {
@@ -230,7 +219,7 @@ tiltToggle.addEventListener('click', () => {
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-// Apply initial mask via JS (uses base64 from masks.js)
-applyMask('mask');
+// Apply initial mask
+applyMask();
 applyBlend('screen');
 tick();
