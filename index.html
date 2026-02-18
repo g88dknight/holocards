@@ -7,25 +7,30 @@
     <title>Holographic Trading Card – Emory | Kraken Lab</title>
     <meta name="description"
         content="A premium holographic trading card with dynamic tilt, rainbow shimmer, and sparkle effects.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
 
 <body>
+    <p class="card-title">kraken trading cards</p>
+
     <main class="card-container" id="cardContainer">
         <div class="card" id="card">
             <div class="card-face">
                 <!-- Base: portrait photo -->
                 <img src="./card.png" alt="Emory – Personal AI Assistant" class="card-image">
 
-                <!-- Holo effects — masked to white areas of mask.png (text, border, logo) -->
+                <!-- Mask overlay — rendered visibly so text/border/logo show -->
+                <img src="./mask.png" alt="" class="card-mask" aria-hidden="true">
+
+                <!-- Holo effects sit ON TOP of mask, only visible where mask is white -->
                 <div class="card-holo"></div>
                 <div class="card-sparkle"></div>
                 <div class="card-shine"></div>
                 <div class="card-glare"></div>
-
-                <!-- Mask overlay — rendered visibly on top so text/border/logo show -->
-                <img src="./mask.png" alt="" class="card-mask" aria-hidden="true">
 
                 <!-- Rim light on top of everything -->
                 <div class="card-rim"></div>
