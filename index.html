@@ -15,11 +15,19 @@
     <main class="card-container" id="cardContainer">
         <div class="card" id="card">
             <div class="card-face">
+                <!-- Base: portrait photo -->
                 <img src="./card.png" alt="Emory – Personal AI Assistant" class="card-image">
+
+                <!-- Holo effects — masked to white areas of mask.png (text, border, logo) -->
                 <div class="card-holo"></div>
                 <div class="card-sparkle"></div>
                 <div class="card-shine"></div>
                 <div class="card-glare"></div>
+
+                <!-- Mask overlay — rendered visibly on top so text/border/logo show -->
+                <img src="./mask.png" alt="" class="card-mask" aria-hidden="true">
+
+                <!-- Rim light on top of everything -->
                 <div class="card-rim"></div>
             </div>
         </div>
