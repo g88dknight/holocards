@@ -166,7 +166,7 @@ body {
     inset: 0;
     border-radius: var(--card-radius);
     z-index: 12;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='560'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='560' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    background-image: url('./glitter.png');
     background-size: cover;
     mix-blend-mode: screen;
     opacity: var(--sparkle-opacity, 0);
@@ -177,35 +177,34 @@ body {
 
 /* ─── Pattern Holo Layer ─────────────────────────────────────── */
 /* pattern.png texture with its own holo shimmer, masked by mask.png via JS */
-/* Top-most layer — sits above rim light */
+/* Sits below card-mask (z-index: 1) — below the visible overlay */
 .card-pattern {
     position: absolute;
     inset: 0;
     border-radius: var(--card-radius);
-    z-index: 17;
+    z-index: 1;
     background-image:
         repeating-linear-gradient(calc(var(--rainbow-angle, 0deg) + 45deg),
-            hsla(270, 100%, 70%, 0.2) 0%,
-            hsla(300, 100%, 70%, 0.2) 4%,
-            hsla(330, 100%, 70%, 0.2) 8%,
-            hsla(0, 100%, 70%, 0.2) 12%,
-            hsla(30, 100%, 70%, 0.2) 16%,
-            hsla(60, 100%, 70%, 0.2) 20%,
-            hsla(90, 100%, 70%, 0.2) 24%,
-            hsla(120, 100%, 70%, 0.2) 28%,
-            hsla(150, 100%, 70%, 0.2) 32%,
-            hsla(180, 100%, 70%, 0.2) 36%,
-            hsla(210, 100%, 70%, 0.2) 40%,
-            hsla(240, 100%, 70%, 0.2) 44%,
-            hsla(270, 100%, 70%, 0.2) 48%,
+            hsla(270, 100%, 70%, 0.12) 0%,
+            hsla(300, 100%, 70%, 0.12) 4%,
+            hsla(330, 100%, 70%, 0.12) 8%,
+            hsla(0, 100%, 70%, 0.12) 12%,
+            hsla(30, 100%, 70%, 0.12) 16%,
+            hsla(60, 100%, 70%, 0.12) 20%,
+            hsla(90, 100%, 70%, 0.12) 24%,
+            hsla(120, 100%, 70%, 0.12) 28%,
+            hsla(150, 100%, 70%, 0.12) 32%,
+            hsla(180, 100%, 70%, 0.12) 36%,
+            hsla(210, 100%, 70%, 0.12) 40%,
+            hsla(240, 100%, 70%, 0.12) 44%,
+            hsla(270, 100%, 70%, 0.12) 48%,
             transparent 52%,
             transparent 100%),
         url('./pattern.png');
     background-size: 200% 200%, cover;
     background-position: calc(var(--rainbow-pos, 50%) + 10%) calc(var(--rainbow-pos, 50%) + 10%), center;
-    mix-blend-mode: screen;
-    opacity: var(--pattern-opacity, 0);
-    transition: opacity 0.3s ease;
+    mix-blend-mode: color-dodge;
+    opacity: 0.35;
     /* mask applied dynamically via JS (applyMask) */
 }
 

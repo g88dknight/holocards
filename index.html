@@ -24,6 +24,9 @@
                 <!-- Base: portrait photo -->
                 <img src="./card.png" alt="Emory – Personal AI Assistant" class="card-image">
 
+                <!-- Pattern holo — sits below mask overlay (z-index: 1) -->
+                <div class="card-pattern" id="cardPattern"></div>
+
                 <!-- Mask overlay — rendered visibly so text/border/logo show -->
                 <img src="./mask.png" alt="" class="card-mask" id="cardMaskOverlay" aria-hidden="true">
 
@@ -35,9 +38,6 @@
 
                 <!-- Rim light -->
                 <div class="card-rim"></div>
-
-                <!-- Pattern holo — top-most layer -->
-                <div class="card-pattern" id="cardPattern"></div>
             </div>
         </div>
     </main>

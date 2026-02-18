@@ -31,7 +31,8 @@ holocards/
 ├── script.js         # Interactive logic — tilt, lerp loop, events
 ├── card.png          # Card portrait image (Emory)
 ├── mask.png          # Holographic mask — defines where holo/sparkle effects appear
-├── pattern.png       # Pattern texture — top-most holo overlay layer
+├── pattern.png       # Pattern texture — holo overlay below mask (z-index: 1)
+├── glitter.png       # Glitter texture — used by sparkle layer instead of SVG noise
 ├── masks.js          # Legacy mask data (base64 embeds, currently unused)
 ├── vercel.json       # Vercel deployment config
 ├── CLAUDE.md         # AI agent context (this file)
@@ -44,13 +45,13 @@ holocards/
 
 ### Visual Layer Stack (bottom → top)
 1. **`.card-image`** — The portrait photo (base layer)
-2. **`.card-mask`** — Visible overlay (text, border, logo) from `mask.png`, `mix-blend-mode: screen`
-3. **`.card-holo`** (z-index: 11) — Prismatic rainbow gradient, masked by `mask.png` via JS, `mix-blend-mode: screen`
-4. **`.card-sparkle`** (z-index: 12) — SVG fractal noise grain, masked by `mask.png` via JS, `mix-blend-mode: screen`
-5. **`.card-shine`** (z-index: 14) — Diagonal light sweep tracking cursor, `mix-blend-mode: soft-light`
-6. **`.card-glare`** (z-index: 15) — Radial specular highlight following mouse, `mix-blend-mode: overlay`
-7. **`.card-rim`** (z-index: 16) — Inset border glow (purely decorative)
-8. **`.card-pattern`** (z-index: 17) — `pattern.png` texture with holo rainbow, masked by `mask.png` via JS, `mix-blend-mode: screen` — **top-most layer**, opacity 0–1
+2. **`.card-pattern`** (z-index: 1) — `pattern.png` texture with holo rainbow shimmer, `mix-blend-mode: color-dodge`, fixed opacity 0.35 — sits **below** the mask overlay
+3. **`.card-mask`** (z-index: 2) — Visible overlay (text, border, logo) from `mask.png`, `mix-blend-mode: screen`
+4. **`.card-holo`** (z-index: 11) — Prismatic rainbow gradient, masked by `mask.png` via JS, `mix-blend-mode: screen`
+5. **`.card-sparkle`** (z-index: 12) — `glitter.png` texture, masked by `mask.png` via JS, `mix-blend-mode: screen`
+6. **`.card-shine`** (z-index: 14) — Diagonal light sweep tracking cursor, `mix-blend-mode: soft-light`
+7. **`.card-glare`** (z-index: 15) — Radial specular highlight following mouse, `mix-blend-mode: overlay`
+8. **`.card-rim`** (z-index: 16) — Inset border glow (purely decorative)
 
 ### CSS Custom Properties (driven by JS)
 | Property | Description |
@@ -62,7 +63,6 @@ holocards/
 | `--glare-opacity` | Glare intensity (0–1), scales with tilt distance |
 | `--holo-opacity` | Rainbow layer opacity (0–0.7) |
 | `--sparkle-opacity` | Sparkle grain opacity (0–0.5) |
-| `--pattern-opacity` | Pattern holo layer opacity (0–1.0) |
 | `--rainbow-angle` | Holo gradient angle (deg), shifts with tilt |
 | `--rainbow-pos` | Holo gradient position (%), shifts with tilt |
 
@@ -70,8 +70,8 @@ holocards/
 - **`tick()`** — `requestAnimationFrame` loop running at 60fps
 - **`lerp(a, b, t)`** — Linear interpolation for smooth transitions
 - **`handlePointerMove(x, y)`** — Normalizes cursor position relative to card center
-- **`applyMask()`** — Applies `mask.png` as CSS mask-image to holo, sparkle, and pattern layers
-- **`applyBlend(mode)`** — Sets mix-blend-mode on holo, sparkle, and pattern layers
+- **`applyMask()`** — Applies `mask.png` as CSS mask-image to holo and sparkle layers (not pattern — it sits below the mask)
+- **`applyBlend(mode)`** — Sets mix-blend-mode on holo and sparkle layers; pattern has its own fixed `color-dodge` blend mode
 - **Idle state** — After 3s of no input, targets return to center (spring-back lerp)
 - **Input priority**: Mouse/touch > DeviceOrientation (gyroscope)
 - **iOS 13+**: Requests `DeviceOrientationEvent.requestPermission()` on first click
@@ -127,7 +127,7 @@ The `vercel.json` sets proper cache headers for assets.
 - **`mix-blend-mode`**: Each layer uses a different blend mode to composite naturally over the photo without harsh overlays
 - **Lerp smoothing**: Instead of directly setting rotation, values are interpolated each frame for a fluid, physical feel
 - **Tilt-independent effects**: Holo effects are always active regardless of tilt toggle state
-- **Pattern as top layer**: `pattern.png` sits above everything (z-index: 17) for maximum visual impact
+- **Pattern below mask**: `pattern.png` sits at z-index: 1 (below the mask overlay), giving it a subtle integrated look with fixed `color-dodge` blend mode and constant opacity 0.35
 
 ---
 

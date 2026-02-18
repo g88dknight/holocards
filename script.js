@@ -44,9 +44,9 @@ function applyMask() {
     // Update visible overlay src
     maskOverlay.src = dataUrl;
 
-    // Update CSS mask-image on holo layers
+    // Update CSS mask-image on holo layers (not pattern — it sits below mask)
     const maskCss = `url("${dataUrl}")`;
-    [cardHolo, cardSparkle, cardPattern].forEach(el => {
+    [cardHolo, cardSparkle].forEach(el => {
         el.style.webkitMaskImage = maskCss;
         el.style.maskImage = maskCss;
         el.style.webkitMaskSize = '100% 100%';
@@ -58,7 +58,7 @@ function applyMask() {
 }
 
 function applyBlend(blendMode) {
-    [cardHolo, cardSparkle, cardPattern].forEach(el => {
+    [cardHolo, cardSparkle].forEach(el => {
         el.style.mixBlendMode = blendMode;
     });
     state.currentBlend = blendMode;
@@ -91,10 +91,8 @@ function applyCardState(rotX, rotY, glareX, glareY, intensity) {
 
     const holoOpacity = clamp(intensity * 0.7, 0, 0.7);
     const sparkleOpacity = clamp(intensity * 0.5, 0, 0.5);
-    const patternOpacity = clamp(intensity * 1.0, 0, 1.0);
     card.style.setProperty('--holo-opacity', holoOpacity.toFixed(3));
     card.style.setProperty('--sparkle-opacity', sparkleOpacity.toFixed(3));
-    card.style.setProperty('--pattern-opacity', patternOpacity.toFixed(3));
 }
 
 // ─── Animation Loop ───────────────────────────────────────────────────────────
