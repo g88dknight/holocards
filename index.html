@@ -19,34 +19,20 @@
 
     <!-- ─── Card ─────────────────────────────────────────────── -->
     <main class="card-container" id="cardContainer">
-        <div class="card" id="card">
+        <div class="card masked" id="card" data-rarity="rare holo">
             <div class="card__translater">
                 <button class="card__rotator" id="cardRotator" aria-label="Flip card">
 
-                    <!-- Back face (provide back.png in project root) -->
-                    <img src="./back.png" class="card__back" alt="Card back" onerror="this.style.background='hsl(205,100%,25%)';this.removeAttribute('src')">
+                    <!-- Back face -->
+                    <img src="./back.png" class="card__back" alt="Card back">
 
                     <!-- Front face -->
                     <div class="card__front">
-                        <!-- Base: portrait photo -->
                         <img src="./card.png" alt="Emory – Personal AI Assistant" class="card-image" id="cardImage">
-
-                        <!-- Pattern holo — default z-index: 1, below mask -->
                         <div class="card-pattern" id="cardPattern"></div>
-
-                        <!-- Mask overlay -->
                         <img src="./mask.png" alt="" class="card-mask" id="cardMaskOverlay" aria-hidden="true">
-
-                        <!-- Holo shine (scanlines + rainbow + bars) -->
-                        <div class="card__shine" id="cardHolo"></div>
-
-                        <!-- Glare (specular radial highlight) -->
+                        <div class="card__shine" id="cardShine"></div>
                         <div class="card__glare" id="cardGlare"></div>
-
-                        <!-- Sparkle / glitter -->
-                        <div class="card-sparkle" id="cardSparkle"></div>
-
-                        <!-- Rim light -->
                         <div class="card-rim"></div>
                     </div>
 
@@ -69,106 +55,20 @@
 
         <div class="editor-body" id="editorBody">
 
-            <!-- ── Tilt ─────────────────────────────────────── -->
+            <!-- ── Holo Type ─────────────────────────────────── -->
             <div class="ed-section">
-                <div class="ed-row">
-                    <span class="ed-label">tilt</span>
-                    <button class="toggle-btn active" id="tiltToggle">
-                        <span class="toggle-dot"></span>
-                        <span class="toggle-text">on</span>
-                    </button>
+                <div class="ed-section-title">holo type</div>
+                <div class="holo-grid">
+                    <button class="holo-btn active" data-rarity="rare holo">Holofoil</button>
+                    <button class="holo-btn" data-rarity="rare holo cosmos">Cosmos</button>
+                    <button class="holo-btn" data-rarity="reverse holo">Reverse</button>
+                    <button class="holo-btn" data-rarity="rare rainbow">Rainbow</button>
+                    <button class="holo-btn" data-rarity="rare holo vstar">V-Star</button>
+                    <button class="holo-btn" data-rarity="amazing rare">Amazing</button>
                 </div>
             </div>
 
-            <!-- ── Layer Order ──────────────────────────────── -->
-            <div class="ed-section">
-                <div class="ed-section-title">layer order</div>
-                <div class="layer-stack" id="layerStack">
-                    <!-- items injected by JS; drag to reorder -->
-                    <div class="layer-item" data-layer="holo">
-                        <span class="layer-drag">⠿</span>
-                        <span class="layer-name">holo</span>
-                        <span class="layer-z" id="zHolo">11</span>
-                    </div>
-                    <div class="layer-item" data-layer="mask">
-                        <span class="layer-drag">⠿</span>
-                        <span class="layer-name">mask</span>
-                        <span class="layer-z" id="zMask">2</span>
-                    </div>
-                    <div class="layer-item" data-layer="pattern">
-                        <span class="layer-drag">⠿</span>
-                        <span class="layer-name">pattern</span>
-                        <span class="layer-z" id="zPattern">1</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ── Blend Modes ──────────────────────────────── -->
-            <div class="ed-section">
-                <div class="ed-section-title">blend modes</div>
-
-                <!-- mask blend -->
-                <div class="ed-row">
-                    <span class="ed-label">mask</span>
-                    <div class="blend-select-wrap">
-                        <select class="blend-select" id="blendMask">
-                            <option value="screen" selected>screen</option>
-                            <option value="normal">normal</option>
-                            <option value="multiply">multiply</option>
-                            <option value="overlay">overlay</option>
-                            <option value="color-dodge">dodge</option>
-                            <option value="color-burn">burn</option>
-                            <option value="hard-light">hard light</option>
-                            <option value="soft-light">soft light</option>
-                            <option value="difference">difference</option>
-                            <option value="exclusion">exclusion</option>
-                            <option value="luminosity">luminosity</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- pattern blend -->
-                <div class="ed-row">
-                    <span class="ed-label">pattern</span>
-                    <div class="blend-select-wrap">
-                        <select class="blend-select" id="blendPattern">
-                            <option value="screen">screen</option>
-                            <option value="normal">normal</option>
-                            <option value="multiply">multiply</option>
-                            <option value="overlay">overlay</option>
-                            <option value="color-dodge" selected>dodge</option>
-                            <option value="color-burn">burn</option>
-                            <option value="hard-light">hard light</option>
-                            <option value="soft-light">soft light</option>
-                            <option value="difference">difference</option>
-                            <option value="exclusion">exclusion</option>
-                            <option value="luminosity">luminosity</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- holo blend -->
-                <div class="ed-row">
-                    <span class="ed-label">holo</span>
-                    <div class="blend-select-wrap">
-                        <select class="blend-select" id="blendHolo">
-                            <option value="color-dodge" selected>dodge</option>
-                            <option value="screen">screen</option>
-                            <option value="normal">normal</option>
-                            <option value="multiply">multiply</option>
-                            <option value="overlay">overlay</option>
-                            <option value="color-burn">burn</option>
-                            <option value="hard-light">hard light</option>
-                            <option value="soft-light">soft light</option>
-                            <option value="difference">difference</option>
-                            <option value="exclusion">exclusion</option>
-                            <option value="luminosity">luminosity</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ── File Upload ──────────────────────────────── -->
+            <!-- ── Swap Images ──────────────────────────────── -->
             <div class="ed-section">
                 <div class="ed-section-title">swap images</div>
 
@@ -207,6 +107,7 @@
                     </label>
                     <input type="file" id="uploadBack" accept="image/*" style="display:none">
                 </div>
+
             </div>
 
         </div><!-- /editor-body -->
