@@ -11,7 +11,7 @@ const tiltToggle      = document.getElementById('tiltToggle');
 // ─── Configuration ────────────────────────────────────────────────────────────
 const CONFIG = {
     MAX_ROTATION: 6,
-    GYRO_SCALE: 0.4,
+    GYRO_SCALE: 0.25,
     IDLE_TIMEOUT: 3000,
 };
 

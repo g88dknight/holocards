@@ -102,7 +102,7 @@ holocards/
 - **`applyCardState(rotX, rotY, glareX, glareY)`** — sets all CSS custom properties each frame; `rotX`→`--rotate-x` (rotateX), `rotY`→`--rotate-y` (rotateY)
 - **`handlePointerMove()`** — cursor right → rotY positive (card tilts right toward viewer); cursor down → rotX positive
 - **`resetToCenter()`** — sets all to 0/50
-- **`CONFIG.MAX_ROTATION: 6`** — tilt intensity (degrees); **`CONFIG.GYRO_SCALE: 0.4`** — gyroscope sensitivity multiplier
+- **`CONFIG.MAX_ROTATION: 6`** — tilt intensity (degrees); **`CONFIG.GYRO_SCALE: 0.25`** — gyroscope sensitivity multiplier
 - **`applyMask(url)`** — canvas `toDataURL()` trick to apply mask-image (works on `file://` and `http://`)
 - **`applyBackMask(url)`** — same for back face mask (currently not rendered since back holo is disabled)
 - Card flip on click, gyroscope on mobile, iOS permission request
@@ -121,12 +121,12 @@ holocards/
 - Header (52px fixed top, transparent, no border), card centered in remaining space, bottom bar fixed
 - `body` on mobile: `padding-top:52px; padding-bottom:110px; flex-direction:column; justify-content:flex-start`
 - `.card-container` has `flex:1` to fill available height, centers card inside
-- Card scales via CSS vars: `--card-width: min(380px, 90vw)` (almost full screen)
+- Card scales via CSS vars: `--card-width: min(420px, 92vw)` (almost full screen)
 - Bottom bar transparent (no fill/border), stacks vertically (tilt row + holo 6-column row), buttons larger
 - `mobile-editor-overlay`: `pointer-events:none` when inactive to not block taps
 - Holo gradient coarseness fix: mobile `@media` overrides `background-size`, `--space`, `--glittersize` per variant
   - Cosmos/V-Star: much finer stripes (`--space: 2–2.5%`, larger `background-size` scale)
-  - Rainbow/Amazing: smaller glitter tiles (`--glittersize: 80px`), softer glare
+  - Rainbow/Amazing: glitter tiles scaled to 100px (mobile); percentage-based gradients scale automatically
 
 ---
 

@@ -72,10 +72,10 @@
     outline: 1px solid transparent;
 }
 
-html { background: #000; }
+html { background: #353535; }
 
 body {
-    background: #000;
+    background: #353535;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -855,62 +855,42 @@ body {
     }
 }
 
-/* ─── Mobile: finer gradients ────────────────────────────────── */
+/* ─── Mobile: gradient corrections ──────────────────────────── */
+/* Percentage-based background-sizes already scale with card size.
+   Only override where px-based sizes (glitter) or --space (stripe
+   density) cause visible coarseness on small screens.              */
 @media screen and (max-width: 700px) {
-    /* Holofoil — increase gradient scale so bands aren't coarse */
+    /* Holofoil scanlines — finer at small size */
     .card[data-rarity="rare holo"] .card__shine {
-        background-size: 600% 600%, cover;
-    }
-    .card[data-rarity="rare holo"] .card__shine:before {
-        background-size: 300% 300%, 300% 300%;
+        --scanlines-space: 0.5px;
     }
 
-    /* Cosmos — finer stripes, confined to mask via mask-size */
-    .card[data-rarity="rare holo cosmos"] .card__shine {
-        --space: 2%;
-        background-size: 800% 1800%, cover;
-    }
-    .card[data-rarity="rare holo cosmos"] .card__shine:before {
-        --space: 2%;
-        background-size: 800% 1800%;
-    }
+    /* Cosmos — keep same background-size; just tighten --space so
+       colour stripes are narrower relative to the smaller card     */
+    .card[data-rarity="rare holo cosmos"] .card__shine,
+    .card[data-rarity="rare holo cosmos"] .card__shine:before,
     .card[data-rarity="rare holo cosmos"] .card__shine:after {
-        --space: 2%;
-        background-size: 800% 1800%;
+        --space: 2.5%;
     }
 
-    /* V-Star — finer columns, scale up so stripes are narrower on small screen */
+    /* V-Star — tighter stripe spacing */
     .card[data-rarity="rare holo vstar"] .card__shine,
     .card[data-rarity="rare holo vstar"] .card__shine:after {
-        --space: 2.5%;
-        background-size: 400% 1400%, 600% 100%, 400% 100%;
-    }
-    .card[data-rarity="rare holo vstar"] .card__shine:after {
-        background-size: 400% 800%, 400% 100%, 400% 100%;
+        --space: 3%;
     }
 
-    /* Rainbow — smaller glitter tiles, softer glare */
+    /* Rainbow — glitter.png is a fixed-px texture; scale it down
+       so tiles aren't huge relative to the smaller card            */
     .card[data-rarity="rare rainbow"] .card__shine {
-        --glittersize: 80px;
-        background-size: 200% 200%, 80px 80px, 400% 400%;
+        background-size: 200% 200%, 100px 100px, 400% 400%;
     }
     .card[data-rarity="rare rainbow"] .card__shine:after {
-        --glittersize: 80px;
-        background-size: 80px 80px, 400% 400%;
-    }
-    .card[data-rarity="rare rainbow"] .card__glare {
-        opacity: calc(var(--pointer-from-center) * 0.5);
-        filter: brightness(.7) contrast(1.4);
+        background-size: 100px 100px, 400% 400%;
     }
 
-    /* Amazing Rare — smaller glitter, finer sunpillar */
+    /* Amazing Rare — same glitter fix */
     .card[data-rarity="amazing rare"] .card__shine {
-        --glittersize: 80px;
-        background-size: 80px 80px, 80px 80px, cover;
-    }
-    .card[data-rarity="amazing rare"] .card__shine:after {
-        --space: 2.5%;
-        background-size: 800% 1600%;
+        background-size: 100px 100px, 100px 100px, cover;
     }
 }
 
@@ -1663,6 +1643,11 @@ body {
     font-weight: 500;
     letter-spacing: -0.04em;
     color: rgba(255, 255, 255, 0.8);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    pointer-events: none;
 }
 
 .mobile-editor-btn {
@@ -1779,8 +1764,8 @@ body {
 
     /* card: almost full screen width */
     :root {
-        --card-width: min(380px, 90vw);
-        --card-height: calc(min(380px, 90vw) / 0.718);
+        --card-width: min(420px, 92vw);
+        --card-height: calc(min(420px, 92vw) / 0.718);
     }
 
     /* card container: fill available space and center card */
