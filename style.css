@@ -255,7 +255,7 @@ body {
         url('./pattern.png');
     background-size: 200% 200%, cover;
     background-position: calc(var(--rainbow-pos, 50%) + 10%) calc(var(--rainbow-pos, 50%) + 10%), center;
-    mix-blend-mode: color-dodge;
+    mix-blend-mode: overlay;
     opacity: 0.35;
     pointer-events: none;
 }
@@ -269,7 +269,7 @@ body {
     object-fit: cover;
     border-radius: var(--card-radius);
     z-index: 2;
-    mix-blend-mode: screen;
+    mix-blend-mode: normal;
     pointer-events: none;
     overflow: hidden;
 }
@@ -290,7 +290,7 @@ body {
     background-position: center;
 
     filter: brightness(.85) contrast(2.75) saturate(.65);
-    mix-blend-mode: color-dodge;
+    mix-blend-mode: normal;
     opacity: var(--card-opacity);
 }
 
