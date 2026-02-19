@@ -110,12 +110,21 @@ holocards/
 
 ### Editor Panel
 - **Holo type** — 6-button row in bottom bar, sets `data-rarity` on `.card`
-- **Layer order** — drag-to-reorder list, reassigns z-index
+- **Layer order** — drag-to-reorder list, default: holo:30, pattern:20, mask:10
 - **Blend modes** — selects for mask/pattern/holo layers
 - **Swap images** — file inputs for card, mask-front, mask-back, pattern, back
 - Desktop editor: fixed top-right, collapsible, hidden on mobile
 - Mobile: hamburger in header opens bottom drawer (cloned from desktop editor)
 - Tilt toggle: fixed bottom bar, shared between desktop and mobile
+
+### Mobile Layout
+- Header (52px fixed top), card centered in remaining space, bottom bar fixed
+- `body` on mobile: `padding-top:52px; padding-bottom:100px; flex-direction:column; justify-content:flex-start`
+- `.card-container` has `flex:1` to fill available height, centers card inside
+- Card scales via CSS vars: `--card-width: min(280px, 78vw)`
+- Bottom bar stacks vertically (tilt row + holo 6-column row)
+- `mobile-editor-overlay`: `pointer-events:none` when inactive to not block taps
+- Holo gradient coarseness fix: mobile `@media` overrides `background-size` to scale up gradients
 
 ---
 

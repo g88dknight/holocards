@@ -150,7 +150,8 @@ body {
     will-change: transform;
     -webkit-transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
     transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
-    transition: box-shadow 0.4s ease;
+    transition: -webkit-transform 0.08s ease-out, transform 0.08s ease-out,
+                box-shadow 0.4s ease;
     cursor: pointer;
 
     box-shadow:
@@ -842,6 +843,38 @@ body {
 @media screen and (max-width: 900px) {
     .card[data-rarity="rare holo"] .card__shine {
         --scanlines-space: 0.5px;
+    }
+}
+
+/* ─── Mobile: finer gradients ────────────────────────────────── */
+@media screen and (max-width: 700px) {
+    /* Holofoil — increase gradient scale so bands aren't coarse */
+    .card[data-rarity="rare holo"] .card__shine {
+        background-size: 600% 600%, cover;
+    }
+    .card[data-rarity="rare holo"] .card__shine:before {
+        background-size: 300% 300%, 300% 300%;
+    }
+
+    /* Cosmos — reduce stripe width */
+    .card[data-rarity="rare holo cosmos"] .card__shine,
+    .card[data-rarity="rare holo cosmos"] .card__shine:before,
+    .card[data-rarity="rare holo cosmos"] .card__shine:after {
+        --space: 2.5%;
+        background-size: 600% 1350%, cover;
+    }
+
+    /* V-Star — finer columns */
+    .card[data-rarity="rare holo vstar"] .card__shine,
+    .card[data-rarity="rare holo vstar"] .card__shine:after {
+        --space: 3.5%;
+        background-size: 300% 1000%, 450% 100%, 300% 100%;
+    }
+
+    /* Amazing Rare — finer sunpillar */
+    .card[data-rarity="amazing rare"] .card__shine:after {
+        --space: 3.5%;
+        background-size: 600% 1200%;
     }
 }
 
@@ -1623,11 +1656,13 @@ body {
     background: rgba(0, 0, 0, 0.5);
     z-index: 210;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.25s ease;
 }
 
 .mobile-editor-overlay.active {
     opacity: 1;
+    pointer-events: auto;
 }
 
 /* ── Mobile Editor Drawer ────────────────────────────────────── */
@@ -1678,8 +1713,7 @@ body {
 /* ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 700px) {
-    /* hide desktop elements */
-    .card-title { display: none; }
+    /* hide desktop editor, keep card title visible */
     .editor { display: none; }
 
     /* show mobile header */
@@ -1689,29 +1723,59 @@ body {
     .mobile-editor-overlay { display: block; }
     .mobile-editor-drawer  { display: flex; flex-direction: column; }
 
-    /* body padding for header and bottom bar */
-    body { padding-top: 52px; padding-bottom: 70px; }
+    /* card title — hidden on mobile (shown in mobile-header instead) */
+    .card-title { display: none; }
 
-    /* bottom bar — stack holo buttons 2 columns on mobile */
-    .holo-grid-bottom {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 4px;
+    /* body: flex column filling full viewport */
+    body {
+        padding-top: 52px;
+        padding-bottom: 100px;
+        min-height: 100dvh;
+        justify-content: flex-start;
+        align-items: stretch;
     }
 
-    .holo-grid-bottom .holo-btn {
-        padding: 5px 6px;
-        font-size: 9px;
+    /* card: scale to viewport width */
+    :root {
+        --card-width: min(280px, 78vw);
+        --card-height: calc(min(280px, 78vw) / 0.718);
     }
 
+    /* card container: fill available space and center card */
+    .card-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        width: 100%;
+        min-height: 0;
+    }
+
+    /* bottom bar — stacked: tilt row + holo row */
     .bottom-bar {
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 8px 16px 12px;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px 18px;
     }
 
-    .bottom-bar-group.holo-group {
+    .bottom-bar-group {
         width: 100%;
         justify-content: center;
     }
+
+    .holo-grid-bottom {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 4px;
+        width: 100%;
+    }
+
+    .holo-grid-bottom .holo-btn {
+        padding: 5px 2px;
+        font-size: 8.5px;
+        text-align: center;
+    }
+
+    .hint { display: none; }
 }
