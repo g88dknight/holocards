@@ -8,7 +8,7 @@ const tiltToggle  = document.getElementById('tiltToggle');
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 const CONFIG = {
-    MAX_ROTATION: 8,
+    MAX_ROTATION: 12,
     IDLE_TIMEOUT: 3000,
 };
 
