@@ -26,7 +26,11 @@
                     <!-- Back face -->
                     <div class="card__back-wrap">
                         <img src="./back.png" class="card__back" alt="Card back" id="cardBack">
-                        <img src="./mask.png" alt="" class="card__back-mask" id="cardBackMask" aria-hidden="true">
+                        <div class="card-back-pattern" id="cardBackPattern"></div>
+                        <img src="./back mask.png" alt="" class="card__back-mask" id="cardBackMask" aria-hidden="true">
+                        <div class="card__back-shine" id="cardBackShine"></div>
+                        <div class="card__back-glare" id="cardBackGlare"></div>
+                        <div class="card-rim"></div>
                     </div>
 
                     <!-- Front face -->
@@ -45,7 +49,7 @@
     </main>
 
     <!-- ─── Editor Panel ──────────────────────────────────────── -->
-    <aside class="editor" id="editor">
+    <aside class="editor collapsed" id="editor">
 
         <div class="editor-header">
             <span class="editor-title">editor</span>

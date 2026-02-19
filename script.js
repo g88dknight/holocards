@@ -1,11 +1,12 @@
 // ─── Element References ───────────────────────────────────────────────────────
-const card        = document.getElementById('card');
-const cardRotator = document.getElementById('cardRotator');
-const cardImage   = document.getElementById('cardImage');
-const cardPattern = document.getElementById('cardPattern');
-const maskOverlay = document.getElementById('cardMaskOverlay');
-const backMask    = document.getElementById('cardBackMask');
-const tiltToggle  = document.getElementById('tiltToggle');
+const card            = document.getElementById('card');
+const cardRotator     = document.getElementById('cardRotator');
+const cardImage       = document.getElementById('cardImage');
+const cardPattern     = document.getElementById('cardPattern');
+const cardBackPattern = document.getElementById('cardBackPattern');
+const maskOverlay     = document.getElementById('cardMaskOverlay');
+const backMask        = document.getElementById('cardBackMask');
+const tiltToggle      = document.getElementById('tiltToggle');
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 const CONFIG = {
@@ -29,13 +30,19 @@ function round(v, p = 3)  { return parseFloat(v.toFixed(p)); }
 // ─── CSS var setter ───────────────────────────────────────────────────────────
 function set(prop, val) { card.style.setProperty(prop, val); }
 
-// ─── Apply mask (sets --mask var + .masked class + overlay src) ───────────────
+// ─── Apply front mask ─────────────────────────────────────────────────────────
 function applyMask(url) {
     const u = url || './mask.png';
     maskOverlay.src = u;
-    backMask.src = u;
     set('--mask', `url("${u}")`);
     card.classList.add('masked');
+}
+
+// ─── Apply back mask ──────────────────────────────────────────────────────────
+function applyBackMask(url) {
+    const u = url || './back mask.png';
+    backMask.src = u;
+    set('--back-mask', `url("${u}")`);
 }
 
 // ─── Core frame update — called directly on every pointer event ───────────────
@@ -77,8 +84,9 @@ function applyCardState(rotX, rotY, glareX, glareY) {
     const rPos   = 50  + (rotY / CONFIG.MAX_ROTATION) * 30;
     set('--rainbow-angle', `${round(rAngle)}deg`);
     set('--rainbow-pos',   `${round(rPos)}%`);
-    cardPattern.style.backgroundPosition =
-        `calc(${round(rPos)}% + 10%) calc(${round(rPos)}% + 10%), center`;
+    const patBgPos = `calc(${round(rPos)}% + 10%) calc(${round(rPos)}% + 10%), center`;
+    cardPattern.style.backgroundPosition = patBgPos;
+    if (cardBackPattern) cardBackPattern.style.backgroundPosition = patBgPos;
 }
 
 // ─── Reset to center ──────────────────────────────────────────────────────────
@@ -368,4 +376,5 @@ setupUpload('uploadBack', 'nameBack', (url) => {
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 applyMask('./mask.png');
+applyBackMask('./back mask.png');
 resetToCenter();
