@@ -234,7 +234,7 @@ body {
     position: absolute;
     inset: 0;
     border-radius: var(--card-radius);
-    z-index: 1;
+    z-index: 11;
     background-image:
         repeating-linear-gradient(calc(var(--rainbow-angle, 0deg) + 45deg),
             hsla(270, 100%, 70%, 0.12) 0%,
@@ -268,7 +268,7 @@ body {
     height: 100%;
     object-fit: cover;
     border-radius: var(--card-radius);
-    z-index: 2;
+    z-index: 1;
     mix-blend-mode: normal;
     pointer-events: none;
     overflow: hidden;
@@ -279,7 +279,7 @@ body {
 .card__shine {
     position: absolute;
     inset: 0;
-    z-index: 11;
+    z-index: 2;
     border-radius: var(--card-radius);
     transform: translateZ(1px);
     pointer-events: none;
@@ -290,7 +290,7 @@ body {
     background-position: center;
 
     filter: brightness(.85) contrast(2.75) saturate(.65);
-    mix-blend-mode: normal;
+    mix-blend-mode: color-dodge;
     opacity: var(--card-opacity);
 }
 
@@ -318,7 +318,7 @@ body {
 .card__glare {
     position: absolute;
     inset: 0;
-    z-index: 12;
+    z-index: 3;
     border-radius: var(--card-radius);
     transform: translateZ(1.41px);
     pointer-events: none;
