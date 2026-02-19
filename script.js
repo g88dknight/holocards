@@ -30,19 +30,43 @@ function round(v, p = 3)  { return parseFloat(v.toFixed(p)); }
 // ─── CSS var setter ───────────────────────────────────────────────────────────
 function set(prop, val) { card.style.setProperty(prop, val); }
 
+// ─── Load image as blob URL (guarantees mask-image works cross-browser) ───────
+function loadAsBlob(src, callback) {
+    fetch(src)
+        .then(r => r.blob())
+        .then(blob => callback(URL.createObjectURL(blob)))
+        .catch(() => callback(src)); // fallback to raw path on fetch failure
+}
+
 // ─── Apply front mask ─────────────────────────────────────────────────────────
 function applyMask(url) {
-    const u = url || './mask-front.png';
-    maskOverlay.src = u;
-    set('--mask', `url("${u}")`);
-    card.classList.add('masked');
+    // If already a blob or data URL, apply directly
+    if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+        maskOverlay.src = url;
+        set('--mask', `url("${url}")`);
+        card.classList.add('masked');
+        return;
+    }
+    const src = url || './mask-front.png';
+    loadAsBlob(src, (blobUrl) => {
+        maskOverlay.src = blobUrl;
+        set('--mask', `url("${blobUrl}")`);
+        card.classList.add('masked');
+    });
 }
 
 // ─── Apply back mask ──────────────────────────────────────────────────────────
 function applyBackMask(url) {
-    const u = url || './mask-back.png';
-    backMask.src = u;
-    set('--back-mask', `url("${u}")`);
+    if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+        backMask.src = url;
+        set('--back-mask', `url("${url}")`);
+        return;
+    }
+    const src = url || './mask-back.png';
+    loadAsBlob(src, (blobUrl) => {
+        backMask.src = blobUrl;
+        set('--back-mask', `url("${blobUrl}")`);
+    });
 }
 
 // ─── Core frame update — called directly on every pointer event ───────────────
