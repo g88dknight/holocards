@@ -24,7 +24,10 @@
                 <button class="card__rotator" id="cardRotator" aria-label="Flip card">
 
                     <!-- Back face -->
-                    <img src="./back.png" class="card__back" alt="Card back">
+                    <div class="card__back-wrap">
+                        <img src="./back.png" class="card__back" alt="Card back" id="cardBack">
+                        <img src="./mask.png" alt="" class="card__back-mask" id="cardBackMask" aria-hidden="true">
+                    </div>
 
                     <!-- Front face -->
                     <div class="card__front">
@@ -55,42 +58,19 @@
 
         <div class="editor-body" id="editorBody">
 
-            <!-- ── Tilt ──────────────────────────────────────── -->
-            <div class="ed-section">
-                <div class="ed-row">
-                    <span class="ed-label">tilt</span>
-                    <button class="toggle-btn active" id="tiltToggle">
-                        <span class="toggle-text">on</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ── Holo Type ─────────────────────────────────── -->
-            <div class="ed-section">
-                <div class="ed-section-title">holo type</div>
-                <div class="holo-grid">
-                    <button class="holo-btn active" data-rarity="rare holo">Holofoil</button>
-                    <button class="holo-btn" data-rarity="rare holo cosmos">Cosmos</button>
-                    <button class="holo-btn" data-rarity="reverse holo">Reverse</button>
-                    <button class="holo-btn" data-rarity="rare rainbow">Rainbow</button>
-                    <button class="holo-btn" data-rarity="rare holo vstar">V-Star</button>
-                    <button class="holo-btn" data-rarity="amazing rare">Amazing</button>
-                </div>
-            </div>
-
             <!-- ── Layer Order ───────────────────────────────── -->
             <div class="ed-section">
                 <div class="ed-section-title">layer order</div>
                 <ul class="layer-list" id="layerList">
-                    <li class="layer-item" data-layer="holo" draggable="true">
-                        <span class="layer-drag">⠿</span>
-                        <span class="layer-name">holo</span>
-                        <span class="layer-z" id="zHolo">30</span>
-                    </li>
                     <li class="layer-item" data-layer="pattern" draggable="true">
                         <span class="layer-drag">⠿</span>
                         <span class="layer-name">pattern</span>
-                        <span class="layer-z" id="zPattern">20</span>
+                        <span class="layer-z" id="zPattern">30</span>
+                    </li>
+                    <li class="layer-item" data-layer="holo" draggable="true">
+                        <span class="layer-drag">⠿</span>
+                        <span class="layer-name">holo</span>
+                        <span class="layer-z" id="zHolo">20</span>
                     </li>
                     <li class="layer-item" data-layer="mask" draggable="true">
                         <span class="layer-drag">⠿</span>
@@ -107,10 +87,10 @@
                 <div class="ed-row">
                     <span class="ed-label">mask</span>
                     <select class="blend-select" id="blendMask">
-                        <option value="normal" selected>normal</option>
+                        <option value="normal">normal</option>
                         <option value="screen">screen</option>
                         <option value="multiply">multiply</option>
-                        <option value="overlay">overlay</option>
+                        <option value="overlay" selected>overlay</option>
                         <option value="color-dodge">color-dodge</option>
                         <option value="color-burn">color-burn</option>
                         <option value="hard-light">hard-light</option>
@@ -127,8 +107,8 @@
                         <option value="normal">normal</option>
                         <option value="screen">screen</option>
                         <option value="multiply">multiply</option>
-                        <option value="overlay" selected>overlay</option>
-                        <option value="color-dodge">color-dodge</option>
+                        <option value="overlay">overlay</option>
+                        <option value="color-dodge" selected>color-dodge</option>
                         <option value="color-burn">color-burn</option>
                         <option value="hard-light">hard-light</option>
                         <option value="soft-light">soft-light</option>
@@ -141,11 +121,11 @@
                 <div class="ed-row">
                     <span class="ed-label">holo</span>
                     <select class="blend-select" id="blendHolo">
-                        <option value="normal" selected>normal</option>
+                        <option value="normal">normal</option>
                         <option value="screen">screen</option>
                         <option value="multiply">multiply</option>
                         <option value="overlay">overlay</option>
-                        <option value="color-dodge">color-dodge</option>
+                        <option value="color-dodge" selected>color-dodge</option>
                         <option value="color-burn">color-burn</option>
                         <option value="hard-light">hard-light</option>
                         <option value="soft-light">soft-light</option>
@@ -200,6 +180,50 @@
 
         </div><!-- /editor-body -->
     </aside>
+
+    <!-- ─── Mobile Header ─────────────────────────────────────── -->
+    <header class="mobile-header">
+        <span class="mobile-header-title">kraken trading cards</span>
+        <button class="mobile-editor-btn" id="mobileEditorBtn" aria-label="Open editor">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="3" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+                <rect x="1" y="7.25" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+                <rect x="1" y="11.5" width="14" height="1.5" rx="0.75" fill="currentColor"/>
+            </svg>
+        </button>
+    </header>
+
+    <!-- ─── Mobile Editor Drawer ──────────────────────────────── -->
+    <div class="mobile-editor-overlay" id="mobileEditorOverlay"></div>
+    <div class="mobile-editor-drawer" id="mobileEditorDrawer">
+        <div class="mobile-drawer-handle"></div>
+        <div class="mobile-drawer-content" id="mobileDrawerContent">
+            <!-- content cloned from editor-body by JS -->
+        </div>
+    </div>
+
+    <!-- ─── Bottom Bar ────────────────────────────────────────── -->
+    <div class="bottom-bar">
+        <!-- Tilt Toggle -->
+        <div class="bottom-bar-group">
+            <span class="bottom-bar-label">tilt</span>
+            <button class="toggle-btn active" id="tiltToggle">
+                <span class="toggle-text">on</span>
+            </button>
+        </div>
+
+        <!-- Holo Type -->
+        <div class="bottom-bar-group holo-group">
+            <div class="holo-grid-bottom">
+                <button class="holo-btn active" data-rarity="rare holo">Holofoil</button>
+                <button class="holo-btn" data-rarity="rare holo cosmos">Cosmos</button>
+                <button class="holo-btn" data-rarity="reverse holo">Reverse</button>
+                <button class="holo-btn" data-rarity="rare rainbow">Rainbow</button>
+                <button class="holo-btn" data-rarity="rare holo vstar">V-Star</button>
+                <button class="holo-btn" data-rarity="amazing rare">Amazing</button>
+            </div>
+        </div>
+    </div>
 
     <p class="hint">Move cursor to interact · Click to flip</p>
 </body>

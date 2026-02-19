@@ -4,6 +4,7 @@ const cardRotator = document.getElementById('cardRotator');
 const cardImage   = document.getElementById('cardImage');
 const cardPattern = document.getElementById('cardPattern');
 const maskOverlay = document.getElementById('cardMaskOverlay');
+const backMask    = document.getElementById('cardBackMask');
 const tiltToggle  = document.getElementById('tiltToggle');
 
 // ─── Configuration ────────────────────────────────────────────────────────────
@@ -32,6 +33,7 @@ function set(prop, val) { card.style.setProperty(prop, val); }
 function applyMask(url) {
     const u = url || './mask.png';
     maskOverlay.src = u;
+    backMask.src = u;
     set('--mask', `url("${u}")`);
     card.classList.add('masked');
 }
@@ -173,7 +175,7 @@ document.querySelector('.editor-header').addEventListener('click', () => {
     document.getElementById('editor').classList.toggle('collapsed');
 });
 
-// ─── Editor: Tilt Toggle ──────────────────────────────────────────────────────
+// ─── Tilt Toggle (shared — bottom bar) ───────────────────────────────────────
 tiltToggle.addEventListener('click', () => {
     state.tiltEnabled = !state.tiltEnabled;
     tiltToggle.classList.toggle('active', state.tiltEnabled);
@@ -181,7 +183,7 @@ tiltToggle.addEventListener('click', () => {
     if (!state.tiltEnabled) resetToCenter();
 });
 
-// ─── Editor: Holo Type Switcher ───────────────────────────────────────────────
+// ─── Holo Type Switcher (shared — bottom bar) ─────────────────────────────────
 document.querySelectorAll('.holo-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.holo-btn').forEach(b => b.classList.remove('active'));
@@ -242,9 +244,15 @@ function reassignZIndices() {
 
 reassignZIndices();
 
-// ─── Editor: Blend Modes ──────────────────────────────────────────────────────
+// ─── Editor: Blend Modes (defaults: mask=overlay, pattern=color-dodge, holo=color-dodge) ───
 const cardShine = document.getElementById('cardShine');
 const cardGlare = document.getElementById('cardGlare');
+
+// Apply defaults on init
+maskOverlay.style.mixBlendMode = 'overlay';
+cardPattern.style.mixBlendMode = 'color-dodge';
+cardShine.style.mixBlendMode   = 'color-dodge';
+cardGlare.style.mixBlendMode   = 'color-dodge';
 
 document.getElementById('blendMask').addEventListener('change', (e) => {
     maskOverlay.style.mixBlendMode = e.target.value;
@@ -294,8 +302,69 @@ setupUpload('uploadPattern', 'namePattern', (url) => {
 });
 
 setupUpload('uploadBack', 'nameBack', (url) => {
-    document.querySelector('.card__back').src = url;
+    document.getElementById('cardBack').src = url;
 });
+
+// ─── Mobile Editor Drawer ─────────────────────────────────────────────────────
+(function setupMobileDrawer() {
+    const btn     = document.getElementById('mobileEditorBtn');
+    const overlay = document.getElementById('mobileEditorOverlay');
+    const drawer  = document.getElementById('mobileEditorDrawer');
+    const content = document.getElementById('mobileDrawerContent');
+
+    // Clone editor-body into drawer
+    const editorBody = document.getElementById('editorBody');
+    const clone = editorBody.cloneNode(true);
+    // Give cloned elements unique IDs to avoid conflicts (prefix with 'm-')
+    clone.querySelectorAll('[id]').forEach(el => {
+        el.id = 'm-' + el.id;
+    });
+    content.appendChild(clone);
+
+    // Sync cloned blend selects with originals
+    function syncSelects() {
+        ['blendMask', 'blendPattern', 'blendHolo'].forEach(id => {
+            const orig   = document.getElementById(id);
+            const cloned = document.getElementById('m-' + id);
+            if (orig && cloned) cloned.value = orig.value;
+        });
+    }
+
+    // Bind cloned blend selects
+    const mBlendMask    = document.getElementById('m-blendMask');
+    const mBlendPattern = document.getElementById('m-blendPattern');
+    const mBlendHolo    = document.getElementById('m-blendHolo');
+
+    if (mBlendMask) mBlendMask.addEventListener('change', (e) => {
+        maskOverlay.style.mixBlendMode = e.target.value;
+        document.getElementById('blendMask').value = e.target.value;
+    });
+    if (mBlendPattern) mBlendPattern.addEventListener('change', (e) => {
+        cardPattern.style.mixBlendMode = e.target.value;
+        document.getElementById('blendPattern').value = e.target.value;
+    });
+    if (mBlendHolo) mBlendHolo.addEventListener('change', (e) => {
+        cardShine.style.mixBlendMode = e.target.value;
+        cardGlare.style.mixBlendMode = e.target.value;
+        document.getElementById('blendHolo').value = e.target.value;
+    });
+
+    function openDrawer() {
+        syncSelects();
+        overlay.classList.add('active');
+        drawer.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+        overlay.classList.remove('active');
+        drawer.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    btn.addEventListener('click', openDrawer);
+    overlay.addEventListener('click', closeDrawer);
+})();
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 applyMask('./mask.png');

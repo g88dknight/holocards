@@ -186,20 +186,54 @@ body {
 
 .card__rotator img { height: auto; }
 
-/* ─── Card Back ──────────────────────────────────────────────── */
-.card__back {
+/* ─── Card Back Wrap ─────────────────────────────────────────── */
+.card__back-wrap {
     background-color: var(--card-back);
     -webkit-transform: rotateY(180deg) translateZ(1px);
     transform: rotateY(180deg) translateZ(1px);
     -webkit-backface-visibility: visible;
     backface-visibility: visible;
+    grid-area: 1/1;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    display: grid;
+    position: relative;
+}
+
+/* ─── Card Back ──────────────────────────────────────────────── */
+.card__back {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
     grid-area: 1/1;
     border-radius: var(--card-radius);
-    overflow: hidden;
+    -webkit-backface-visibility: inherit;
+    backface-visibility: inherit;
+    /* reset wildcard overrides */
+    aspect-ratio: unset;
+    -webkit-transform: none;
+    transform: none;
+    position: relative;
+}
+
+/* ─── Card Back Mask ─────────────────────────────────────────── */
+.card__back-mask {
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--card-radius);
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 2;
+    /* reset wildcard overrides */
+    display: block;
+    grid-area: unset;
+    aspect-ratio: unset;
+    -webkit-transform: none;
+    transform: none;
 }
 
 /* ─── Card Front ─────────────────────────────────────────────── */
@@ -1126,7 +1160,7 @@ body {
 /* ─── Hint ───────────────────────────────────────────────────── */
 .hint {
     position: fixed;
-    bottom: 16px;
+    bottom: 80px;
     left: 50%;
     transform: translateX(-50%);
     color: rgba(255, 255, 255, 0.2);
@@ -1139,6 +1173,7 @@ body {
     animation: hintFade 3s ease-in-out 1.5s forwards;
     opacity: 0;
     white-space: nowrap;
+    z-index: 10;
 }
 
 @keyframes hintFade {
@@ -1146,4 +1181,205 @@ body {
     20%  { opacity: 1; transform: translateX(-50%) translateY(0); }
     80%  { opacity: 1; }
     100% { opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/* BOTTOM BAR                                                     */
+/* ══════════════════════════════════════════════════════════════ */
+
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 10px 20px;
+    background: rgba(8, 8, 8, 0.88);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 90;
+}
+
+.bottom-bar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bottom-bar-label {
+    font-family: 'Geist', 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
+}
+
+.holo-group {
+    gap: 6px;
+}
+
+.holo-grid-bottom {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+}
+
+.holo-grid-bottom .holo-btn {
+    padding: 5px 10px;
+    font-size: 10px;
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/* MOBILE HEADER (hidden on desktop)                              */
+/* ══════════════════════════════════════════════════════════════ */
+
+.mobile-header {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: rgba(8, 8, 8, 0.92);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 200;
+}
+
+.mobile-header-title {
+    font-family: 'Geist', 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.mobile-editor-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.mobile-editor-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Mobile Editor Overlay ───────────────────────────────────── */
+.mobile-editor-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 210;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.mobile-editor-overlay.active {
+    opacity: 1;
+}
+
+/* ── Mobile Editor Drawer ────────────────────────────────────── */
+.mobile-editor-drawer {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 80vh;
+    background: rgba(10, 10, 10, 0.97);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px 16px 0 0;
+    z-index: 220;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow: hidden;
+}
+
+.mobile-editor-drawer.active {
+    transform: translateY(0);
+}
+
+.mobile-drawer-handle {
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    margin: 10px auto 6px;
+    flex-shrink: 0;
+}
+
+.mobile-drawer-content {
+    overflow-y: auto;
+    max-height: calc(80vh - 30px);
+    padding-bottom: 24px;
+}
+
+/* mirror editor sections inside drawer */
+.mobile-drawer-content .ed-section {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.mobile-drawer-content .ed-section:last-child { border-bottom: none; }
+
+/* ══════════════════════════════════════════════════════════════ */
+/* RESPONSIVE — MOBILE                                            */
+/* ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 700px) {
+    /* hide desktop elements */
+    .card-title { display: none; }
+    .editor { display: none; }
+
+    /* show mobile header */
+    .mobile-header { display: flex; }
+
+    /* show mobile drawer */
+    .mobile-editor-overlay { display: block; }
+    .mobile-editor-drawer  { display: flex; flex-direction: column; }
+
+    /* body padding for header and bottom bar */
+    body { padding-top: 52px; padding-bottom: 70px; }
+
+    /* bottom bar — stack holo buttons 2 columns on mobile */
+    .holo-grid-bottom {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 4px;
+    }
+
+    .holo-grid-bottom .holo-btn {
+        padding: 5px 6px;
+        font-size: 9px;
+    }
+
+    .bottom-bar {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 16px 12px;
+    }
+
+    .bottom-bar-group.holo-group {
+        width: 100%;
+        justify-content: center;
+    }
 }
