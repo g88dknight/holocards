@@ -290,7 +290,7 @@ body {
     background-position: center;
 
     filter: brightness(.85) contrast(2.75) saturate(.65);
-    mix-blend-mode: color-dodge;
+    mix-blend-mode: normal;
     opacity: var(--card-opacity);
 }
 
@@ -332,7 +332,7 @@ body {
     );
 
     opacity: var(--card-opacity);
-    mix-blend-mode: overlay;
+    mix-blend-mode: normal;
 }
 
 .card__glare:after {
