@@ -280,6 +280,7 @@ body {
     position: absolute;
     inset: 0;
     z-index: 2;
+    display: grid;
     border-radius: var(--card-radius);
     transform: translateZ(1px);
     pointer-events: none;
@@ -296,10 +297,21 @@ body {
 
 .card__shine:before,
 .card__shine:after {
+    content: "";
     grid-area: 1/1;
     transform: translateZ(1px);
     border-radius: var(--card-radius);
     pointer-events: none;
+}
+
+.card__shine:after {
+    --sunpillar-clr-1: var(--sunpillar-6);
+    --sunpillar-clr-2: var(--sunpillar-1);
+    --sunpillar-clr-3: var(--sunpillar-2);
+    --sunpillar-clr-4: var(--sunpillar-3);
+    --sunpillar-clr-5: var(--sunpillar-4);
+    --sunpillar-clr-6: var(--sunpillar-5);
+    transform: translateZ(1.2px);
 }
 
 /* ─── Masking: apply --mask to shine layers ──────────────────── */
@@ -319,6 +331,7 @@ body {
     position: absolute;
     inset: 0;
     z-index: 3;
+    display: grid;
     border-radius: var(--card-radius);
     transform: translateZ(1.41px);
     pointer-events: none;
@@ -336,6 +349,8 @@ body {
 }
 
 .card__glare:after {
+    content: "";
+    grid-area: 1/1;
     pointer-events: none;
     border-radius: var(--card-radius);
 }
@@ -805,7 +820,7 @@ body {
     mix-blend-mode: saturation;
 }
 
-.card[data-rarity="amazing rare"] .card__glare {
+.card.masked[data-rarity="amazing rare"] .card__glare {
     background-image: radial-gradient(
         farthest-corner circle at var(--pointer-x) var(--pointer-y),
         hsla(50, 20%, 90%, 0.45) 0%,
@@ -817,8 +832,7 @@ body {
     mix-blend-mode: overlay;
 }
 
-.card[data-rarity="amazing rare"] .card__glare:after {
-    content: "";
+.card.masked[data-rarity="amazing rare"] .card__glare:after {
     background-image: radial-gradient(
         farthest-corner circle at var(--pointer-x) var(--pointer-y),
         hsla(50, 20%, 90%, 0.75) 0%,
@@ -828,6 +842,10 @@ body {
     filter: brightness(1) contrast(1.5);
     mix-blend-mode: overlay;
     opacity: 1;
+    -webkit-mask-image: var(--mask);
+    mask-image: var(--mask);
+    -webkit-mask-size: cover;
+    mask-size: cover;
 }
 
 /* ══════════════════════════════════════════════════════════════ */
