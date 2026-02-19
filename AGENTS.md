@@ -51,15 +51,23 @@ holocards/
 .card#card[data-rarity="..."]     ← rarity drives CSS variant, .masked/.flipped state
   .card__translater
     button.card__rotator          ← 3D tilt target, click-to-flip
-      img.card__back              ← back.png, rotateY(180deg)
+      .card__back-wrap            ← back face (rotateY 180deg)
+        img.card__back            ← back.png
+        div.card-back-pattern     ← disabled (display:none)
+        img.card__back-mask       ← disabled (display:none)
+        div.card__back-shine      ← disabled (display:none)
+        div.card__back-glare      ← disabled (display:none)
+        div.card-rim
       div.card__front             ← front face, backface-visibility: hidden
         img.card-image            ← z-index: 0, portrait photo
-        div.card-pattern          ← z-index: 1, pattern.png + rainbow gradient
-        img.card-mask             ← z-index: 2, mask.png, mix-blend-mode: screen
-        div.card__shine           ← z-index: 11, holo effect (variant-specific)
-        div.card__glare           ← z-index: 12, glare (variant-specific)
+        div.card-pattern          ← z-index: 11, pattern.png + rainbow gradient
+        img.card-mask             ← z-index: 1, mask-front.png
+        div.card__shine           ← z-index: 2, holo effect (variant-specific)
+        div.card__glare           ← z-index: 3, glare (variant-specific)
         div.card-rim              ← z-index: 16, inset glow
 ```
+
+**Back face holo is disabled** — `card-back-pattern`, `card__back-mask`, `card__back-shine`, `card__back-glare` all have `display:none` in CSS. Re-enable by removing those rules if needed.
 
 ### Card Flip
 - Click `.card__rotator` → toggles `.card.flipped`
@@ -91,17 +99,23 @@ holocards/
 | `--glittersize` | Glitter tile size (200px) |
 
 ### JavaScript Architecture
-- **`tick()`** — requestAnimationFrame loop, lerp smoothing
-- **`applyCardState()`** — sets all CSS custom properties each frame
-- **`applyMask(url)`** — sets `--mask` var, adds `.masked` class, updates overlay src
-- **`handlePointerMove()`** — normalizes cursor to card-relative coords
-- **SMOOTHING** `0.12` (hover), **SPRING_BACK** `0.08` (idle return)
+- **`tick()`** — requestAnimationFrame loop with lerp smoothing (`SMOOTHING: 0.12` hover, `SPRING_BACK: 0.08` idle)
+- **`applyCardState(rotX, rotY, glareX, glareY)`** — sets all CSS custom properties each frame from lerp'd values
+- **`handlePointerMove()`** — normalizes cursor to card-relative coords, sets `state.targetRot*` / `state.targetGlare*`
+- **`resetToCenter()`** — sets targets to 0/50 (tick lerps back smoothly)
+- **`applyMask(url)`** — canvas `toDataURL()` trick to apply mask-image from repo files (works on `file://` and `http://`)
+- **`applyBackMask(url)`** — same for back face mask (currently not rendered since back holo is disabled)
 - Card flip on click, gyroscope on mobile, iOS permission request
+- `touchmove`/`touchend` skip buttons/controls to avoid blocking mobile taps
 
 ### Editor Panel
-- **Holo type** — 2×3 button grid, sets `data-rarity` on `.card`
-- **Swap images** — file inputs for card.png, mask.png, pattern.png, back.png
-- Panel collapsible via header click
+- **Holo type** — 6-button row in bottom bar, sets `data-rarity` on `.card`
+- **Layer order** — drag-to-reorder list, reassigns z-index
+- **Blend modes** — selects for mask/pattern/holo layers
+- **Swap images** — file inputs for card, mask-front, mask-back, pattern, back
+- Desktop editor: fixed top-right, collapsible, hidden on mobile
+- Mobile: hamburger in header opens bottom drawer (cloned from desktop editor)
+- Tilt toggle: fixed bottom bar, shared between desktop and mobile
 
 ---
 

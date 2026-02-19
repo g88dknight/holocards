@@ -150,8 +150,7 @@ body {
     will-change: transform;
     -webkit-transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
     transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
-    transition: -webkit-transform 0.08s ease-out, transform 0.08s ease-out,
-                box-shadow 0.4s ease;
+    transition: box-shadow 0.4s ease;
     cursor: pointer;
 
     box-shadow:
@@ -220,21 +219,7 @@ body {
 
 /* ─── Card Back Mask ─────────────────────────────────────────── */
 .card__back-mask {
-    position: absolute;
-    top: 0; right: 0; bottom: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: var(--card-radius);
-    mix-blend-mode: overlay;
-    pointer-events: none;
-    z-index: 2;
-    /* reset wildcard overrides */
-    display: block;
-    grid-area: unset;
-    aspect-ratio: unset;
-    -webkit-transform: none;
-    transform: none;
+    display: none; /* back holo disabled */
 }
 
 /* Reset wildcard overrides for absolute children inside back-wrap */
@@ -247,7 +232,8 @@ body {
 }
 
 /* ─── Card Back Pattern Layer ───────────────────────────────── */
-.card-back-pattern {
+.card-back-pattern { display: none; } /* back holo disabled */
+.card-back-pattern-DISABLED {
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
     border-radius: var(--card-radius);
@@ -283,7 +269,8 @@ body {
 }
 
 /* ─── Card Back Shine ────────────────────────────────────────── */
-.card__back-shine {
+.card__back-shine { display: none !important; } /* back holo disabled */
+.card__back-shine-DISABLED {
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
     z-index: 12;
@@ -338,7 +325,8 @@ body {
 }
 
 /* ─── Card Back Glare ────────────────────────────────────────── */
-.card__back-glare {
+.card__back-glare { display: none !important; } /* back holo disabled */
+.card__back-glare-DISABLED {
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
     z-index: 13;
@@ -1358,6 +1346,7 @@ body {
     cursor: pointer;
     text-align: center;
     transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    touch-action: manipulation;
 }
 
 .holo-btn:hover {
@@ -1431,6 +1420,7 @@ body {
     font-size: 11px;
     cursor: pointer;
     transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+    touch-action: manipulation;
 }
 .toggle-btn.active {
     background: rgba(255, 255, 255, 0.12);

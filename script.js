@@ -12,20 +12,33 @@ const tiltToggle      = document.getElementById('tiltToggle');
 const CONFIG = {
     MAX_ROTATION: 12,
     IDLE_TIMEOUT: 3000,
+    SMOOTHING:    0.12,
+    SPRING_BACK:  0.08,
 };
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let state = {
-    tiltEnabled:   true,
-    isHovering:    false,
-    idleTimer:     null,
-    gyroIdleTimer: null,
-    _patternUrl:   null,
+    tiltEnabled:    true,
+    isHovering:     false,
+    idleTimer:      null,
+    gyroIdleTimer:  null,
+    rafId:          null,
+    _patternUrl:    null,
+    // lerp targets
+    targetRotX:     0,
+    targetRotY:     0,
+    currentRotX:    0,
+    currentRotY:    0,
+    targetGlareX:   50,
+    targetGlareY:   50,
+    currentGlareX:  50,
+    currentGlareY:  50,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 function round(v, p = 3)  { return parseFloat(v.toFixed(p)); }
+function lerp(a, b, t)    { return a + (b - a) * t; }
 
 // ─── CSS var setter ───────────────────────────────────────────────────────────
 function set(prop, val) { card.style.setProperty(prop, val); }
@@ -122,16 +135,28 @@ function applyCardState(rotX, rotY, glareX, glareY) {
 
 // ─── Reset to center ──────────────────────────────────────────────────────────
 function resetToCenter() {
-    applyCardState(0, 0, 50, 50);
+    state.isHovering  = false;
+    state.targetRotX  = 0;
+    state.targetRotY  = 0;
+    state.targetGlareX = 50;
+    state.targetGlareY = 50;
 }
 
 // ─── Idle timer ───────────────────────────────────────────────────────────────
 function resetIdleTimer() {
     if (state.idleTimer) clearTimeout(state.idleTimer);
-    state.idleTimer = setTimeout(() => {
-        state.isHovering = false;
-        resetToCenter();
-    }, CONFIG.IDLE_TIMEOUT);
+    state.idleTimer = setTimeout(resetToCenter, CONFIG.IDLE_TIMEOUT);
+}
+
+// ─── Animation loop (lerp smoothing) ─────────────────────────────────────────
+function tick() {
+    const s = state.isHovering ? CONFIG.SMOOTHING : CONFIG.SPRING_BACK;
+    state.currentRotX   = lerp(state.currentRotX,   state.targetRotX,   s);
+    state.currentRotY   = lerp(state.currentRotY,   state.targetRotY,   s);
+    state.currentGlareX = lerp(state.currentGlareX, state.targetGlareX, s);
+    state.currentGlareY = lerp(state.currentGlareY, state.targetGlareY, s);
+    applyCardState(state.currentRotX, state.currentRotY, state.currentGlareX, state.currentGlareY);
+    state.rafId = requestAnimationFrame(tick);
 }
 
 // ─── Pointer Input ────────────────────────────────────────────────────────────
@@ -139,11 +164,10 @@ function handlePointerMove(clientX, clientY) {
     const rect  = card.getBoundingClientRect();
     const normX = clamp((clientX - rect.left  - rect.width  / 2) / (rect.width  / 2), -1, 1);
     const normY = clamp((clientY - rect.top   - rect.height / 2) / (rect.height / 2), -1, 1);
-    const rotY   =  normX * CONFIG.MAX_ROTATION;
-    const rotX   = -normY * CONFIG.MAX_ROTATION;
-    const glareX = clamp(((clientX - rect.left) / rect.width)  * 100, 0, 100);
-    const glareY = clamp(((clientY - rect.top)  / rect.height) * 100, 0, 100);
-    applyCardState(rotX, rotY, glareX, glareY);
+    state.targetRotY   =  normX * CONFIG.MAX_ROTATION;
+    state.targetRotX   = -normY * CONFIG.MAX_ROTATION;
+    state.targetGlareX = clamp(((clientX - rect.left) / rect.width)  * 100, 0, 100);
+    state.targetGlareY = clamp(((clientY - rect.top)  / rect.height) * 100, 0, 100);
     resetIdleTimer();
 }
 
@@ -153,19 +177,20 @@ document.addEventListener('mousemove', (e) => {
 });
 
 document.addEventListener('mouseleave', () => {
-    state.isHovering = false;
     resetToCenter();
 });
 
 document.addEventListener('touchmove', (e) => {
+    // Only hijack touch when not interacting with a button/select/input
+    if (e.target.closest('button, select, input, label, .editor, .mobile-editor-drawer, .mobile-editor-overlay, .bottom-bar')) return;
     e.preventDefault();
     const t = e.touches[0];
     state.isHovering = true;
     handlePointerMove(t.clientX, t.clientY);
 }, { passive: false });
 
-document.addEventListener('touchend', () => {
-    state.isHovering = false;
+document.addEventListener('touchend', (e) => {
+    if (e.target.closest('button, select, input, label, .editor, .mobile-editor-drawer, .mobile-editor-overlay, .bottom-bar')) return;
     resetToCenter();
 });
 
@@ -179,9 +204,10 @@ function handleOrientation(e) {
     if (state.isHovering) return;
     const rotY  = clamp(e.gamma ?? 0, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
     const rotX  = clamp((e.beta ?? 0) - 30, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
-    const glareX = 50 + (rotY / CONFIG.MAX_ROTATION) * 40;
-    const glareY = 50 - (rotX / CONFIG.MAX_ROTATION) * 40;
-    applyCardState(-rotX, rotY, glareX, glareY);
+    state.targetRotY   = rotY;
+    state.targetRotX   = -rotX;
+    state.targetGlareX = 50 + (rotY / CONFIG.MAX_ROTATION) * 40;
+    state.targetGlareY = 50 - (rotX / CONFIG.MAX_ROTATION) * 40;
     if (state.gyroIdleTimer) clearTimeout(state.gyroIdleTimer);
     state.gyroIdleTimer = setTimeout(resetToCenter, CONFIG.IDLE_TIMEOUT);
 }
@@ -413,4 +439,4 @@ setupUpload('uploadBack', 'nameBack', (url) => {
 // Pass no URL — reads from the <img> elements already in HTML (src set there)
 applyMask();
 applyBackMask();
-resetToCenter();
+tick();
