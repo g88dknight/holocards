@@ -30,42 +30,49 @@ function round(v, p = 3)  { return parseFloat(v.toFixed(p)); }
 // ─── CSS var setter ───────────────────────────────────────────────────────────
 function set(prop, val) { card.style.setProperty(prop, val); }
 
-// ─── Load image as blob URL (guarantees mask-image works cross-browser) ───────
-function loadAsBlob(src, callback) {
-    fetch(src)
-        .then(r => r.blob())
-        .then(blob => callback(URL.createObjectURL(blob)))
-        .catch(() => callback(src)); // fallback to raw path on fetch failure
+// ─── img → data URL (works for both file:// and http://) ──────────────────────
+function imgToDataUrl(imgEl, callback) {
+    const apply = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width  = imgEl.naturalWidth  || imgEl.width  || 256;
+        canvas.height = imgEl.naturalHeight || imgEl.height || 256;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgEl, 0, 0);
+        callback(canvas.toDataURL());
+    };
+    if (imgEl.complete && imgEl.naturalWidth) {
+        apply();
+    } else {
+        imgEl.addEventListener('load', apply, { once: true });
+    }
 }
 
 // ─── Apply front mask ─────────────────────────────────────────────────────────
 function applyMask(url) {
-    // If already a blob or data URL, apply directly
-    if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+    // Uploaded file (already blob: or data:) — apply directly
+    if (url) {
         maskOverlay.src = url;
         set('--mask', `url("${url}")`);
         card.classList.add('masked');
         return;
     }
-    const src = url || './mask-front.png';
-    loadAsBlob(src, (blobUrl) => {
-        maskOverlay.src = blobUrl;
-        set('--mask', `url("${blobUrl}")`);
+    // Init: maskOverlay already has src="./mask-front.png" set in HTML
+    imgToDataUrl(maskOverlay, (dataUrl) => {
+        set('--mask', `url("${dataUrl}")`);
         card.classList.add('masked');
     });
 }
 
 // ─── Apply back mask ──────────────────────────────────────────────────────────
 function applyBackMask(url) {
-    if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+    if (url) {
         backMask.src = url;
         set('--back-mask', `url("${url}")`);
         return;
     }
-    const src = url || './mask-back.png';
-    loadAsBlob(src, (blobUrl) => {
-        backMask.src = blobUrl;
-        set('--back-mask', `url("${blobUrl}")`);
+    // Init: backMask already has src="./mask-back.png" set in HTML
+    imgToDataUrl(backMask, (dataUrl) => {
+        set('--back-mask', `url("${dataUrl}")`);
     });
 }
 
@@ -403,6 +410,7 @@ setupUpload('uploadBack', 'nameBack', (url) => {
 })();
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-applyMask('./mask-front.png');
-applyBackMask('./mask-back.png');
+// Pass no URL — reads from the <img> elements already in HTML (src set there)
+applyMask();
+applyBackMask();
 resetToCenter();
