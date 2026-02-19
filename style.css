@@ -4,8 +4,8 @@
 /* ─── Root Variables ─────────────────────────────────────────── */
 :root {
     /* card geometry */
-    --card-width: 480px;
-    --card-height: 668px;
+    --card-width: 380px;
+    --card-height: 529px;
     --card-radius: 4.55% / 3.5%;
     --card-aspect: 0.718;
 
@@ -141,8 +141,7 @@ body {
     will-change: transform;
     -webkit-transform: rotateX(var(--rotate-x)) rotateY(var(--rotate-y));
     transform: rotateX(var(--rotate-x)) rotateY(var(--rotate-y));
-    transition: -webkit-transform 0.08s ease-out, transform 0.08s ease-out,
-                box-shadow 0.4s ease;
+    transition: box-shadow 0.4s ease;
     cursor: pointer;
 
     box-shadow:
@@ -157,7 +156,8 @@ body {
 }
 
 .card.is-resting .card__rotator {
-    transition: -webkit-transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+    transition: -webkit-transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+                transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
                 box-shadow 0.4s ease;
 }
 
@@ -188,6 +188,7 @@ body {
     overflow: hidden;
     display: grid;
     position: relative;
+    contain: layout style paint;
 }
 
 /* ─── Card Back ──────────────────────────────────────────────── */
@@ -572,6 +573,7 @@ body {
     -webkit-transform: translate3d(0px, 0px, 0.01px);
     transform: translate3d(0px, 0px, 0.01px);
     position: relative;
+    contain: layout style paint;
 }
 
 .card__front * {
@@ -629,7 +631,7 @@ body {
             transparent 100%),
         url('./pattern.png');
     background-size: 200% 200%, cover;
-    background-position: calc(var(--rainbow-pos, 50%) + 10%) calc(var(--rainbow-pos, 50%) + 10%), center;
+    background-position: var(--pattern-pos, calc(60%) calc(60%)), center;
     mix-blend-mode: overlay;
     opacity: 0.35;
     pointer-events: none;
@@ -657,8 +659,6 @@ body {
     z-index: 2;
     display: grid;
     border-radius: var(--card-radius);
-    -webkit-transform: translateZ(1px);
-    transform: translateZ(1px);
     pointer-events: none;
     overflow: hidden;
 
@@ -675,8 +675,6 @@ body {
 .card__shine:after {
     content: "";
     grid-area: 1/1;
-    -webkit-transform: translateZ(1px);
-    transform: translateZ(1px);
     border-radius: var(--card-radius);
     pointer-events: none;
 }
@@ -688,8 +686,6 @@ body {
     --sunpillar-clr-4: var(--sunpillar-3);
     --sunpillar-clr-5: var(--sunpillar-4);
     --sunpillar-clr-6: var(--sunpillar-5);
-    -webkit-transform: translateZ(1.2px);
-    transform: translateZ(1.2px);
 }
 
 /* ─── Masking: apply --mask to shine layers ──────────────────── */
@@ -711,8 +707,6 @@ body {
     z-index: 3;
     display: grid;
     border-radius: var(--card-radius);
-    -webkit-transform: translateZ(1.41px);
-    transform: translateZ(1.41px);
     pointer-events: none;
     overflow: hidden;
 

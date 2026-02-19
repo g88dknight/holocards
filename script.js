@@ -3,7 +3,6 @@ const card            = document.getElementById('card');
 const cardRotator     = document.getElementById('cardRotator');
 const cardImage       = document.getElementById('cardImage');
 const cardPattern     = document.getElementById('cardPattern');
-const cardBackPattern = document.getElementById('cardBackPattern');
 const maskOverlay     = document.getElementById('cardMaskOverlay');
 const backMask        = document.getElementById('cardBackMask');
 const tiltToggle      = document.getElementById('tiltToggle');
@@ -119,9 +118,7 @@ function applyCardState(rotX, rotY, glareX, glareY) {
     const rPos   = 50  + (rotY / CONFIG.MAX_ROTATION) * 30;
     set('--rainbow-angle', `${round(rAngle)}deg`);
     set('--rainbow-pos',   `${round(rPos)}%`);
-    const patBgPos = `calc(${round(rPos)}% + 10%) calc(${round(rPos)}% + 10%), center`;
-    cardPattern.style.backgroundPosition = patBgPos;
-    if (cardBackPattern) cardBackPattern.style.backgroundPosition = patBgPos;
+    set('--pattern-pos',   `calc(${round(rPos)}% + 10%) calc(${round(rPos)}% + 10%), center`);
 }
 
 // ─── RAF-throttled flush ──────────────────────────────────────────────────────
@@ -138,6 +135,7 @@ function scheduleFrame(rotX, rotY, glareX, glareY) {
 
 // ─── Reset to center ──────────────────────────────────────────────────────────
 function resetToCenter() {
+    card.classList.add('is-resting');
     scheduleFrame(0, 0, 50, 50);
 }
 
@@ -165,6 +163,7 @@ function handlePointerMove(clientX, clientY) {
 
 document.addEventListener('mousemove', (e) => {
     state.isHovering = true;
+    card.classList.remove('is-resting');
     handlePointerMove(e.clientX, e.clientY);
 });
 
@@ -178,6 +177,7 @@ document.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const t = e.touches[0];
     state.isHovering = true;
+    card.classList.remove('is-resting');
     handlePointerMove(t.clientX, t.clientY);
 }, { passive: false });
 
