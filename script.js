@@ -32,7 +32,7 @@ function set(prop, val) { card.style.setProperty(prop, val); }
 
 // ─── Apply front mask ─────────────────────────────────────────────────────────
 function applyMask(url) {
-    const u = url || './mask.png';
+    const u = url || './mask-front.png';
     maskOverlay.src = u;
     set('--mask', `url("${u}")`);
     card.classList.add('masked');
@@ -40,7 +40,7 @@ function applyMask(url) {
 
 // ─── Apply back mask ──────────────────────────────────────────────────────────
 function applyBackMask(url) {
-    const u = url || './back mask.png';
+    const u = url || './mask-back.png';
     backMask.src = u;
     set('--back-mask', `url("${u}")`);
 }
@@ -295,6 +295,10 @@ setupUpload('uploadMask', 'nameMask', (url) => {
     applyMask(url);
 });
 
+setupUpload('uploadMaskBack', 'nameMaskBack', (url) => {
+    applyBackMask(url);
+});
+
 setupUpload('uploadPattern', 'namePattern', (url) => {
     state._patternUrl = `url("${url}")`;
     cardPattern.style.backgroundImage =
@@ -375,6 +379,6 @@ setupUpload('uploadBack', 'nameBack', (url) => {
 })();
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-applyMask('./mask.png');
-applyBackMask('./back mask.png');
+applyMask('./mask-front.png');
+applyBackMask('./mask-back.png');
 resetToCenter();
