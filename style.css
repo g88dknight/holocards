@@ -996,6 +996,54 @@ body {
     color: rgba(255, 255, 255, 0.9);
 }
 
+/* ── Layer Order ─────────────────────────────────────────────── */
+.layer-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.layer-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 7px;
+    padding: 6px 9px;
+    cursor: grab;
+    user-select: none;
+    transition: background 0.12s ease, opacity 0.12s ease;
+}
+
+.layer-item:hover {
+    background: rgba(255, 255, 255, 0.09);
+}
+
+.layer-item.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+}
+
+.layer-drag {
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 13px;
+    line-height: 1;
+}
+
+.layer-name {
+    flex: 1;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.layer-z {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.25);
+    font-variant-numeric: tabular-nums;
+}
+
 /* ── Toggle Button ───────────────────────────────────────────── */
 .toggle-btn {
     padding: 3px 10px;

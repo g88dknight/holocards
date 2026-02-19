@@ -190,6 +190,58 @@ document.querySelectorAll('.holo-btn').forEach(btn => {
     });
 });
 
+// ─── Editor: Layer Order ──────────────────────────────────────────────────────
+const layerEls = {
+    holo:    document.getElementById('cardShine'),
+    pattern: cardPattern,
+    mask:    maskOverlay,
+};
+const layerZEls = {
+    holo:    document.getElementById('zHolo'),
+    pattern: document.getElementById('zPattern'),
+    mask:    document.getElementById('zMask'),
+};
+
+function reassignZIndices() {
+    const items = document.querySelectorAll('#layerList .layer-item');
+    const total = items.length;
+    items.forEach((item, i) => {
+        const layer = item.dataset.layer;
+        const z = (total - i) * 10;
+        layerEls[layer].style.zIndex = z;
+        layerZEls[layer].textContent = z;
+    });
+}
+
+(function setupLayerDrag() {
+    const list = document.getElementById('layerList');
+    let dragging = null;
+
+    list.addEventListener('dragstart', (e) => {
+        dragging = e.target.closest('.layer-item');
+        dragging.classList.add('dragging');
+    });
+    list.addEventListener('dragend', () => {
+        if (dragging) dragging.classList.remove('dragging');
+        dragging = null;
+        reassignZIndices();
+    });
+    list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const over = e.target.closest('.layer-item');
+        if (!over || over === dragging) return;
+        const rect = over.getBoundingClientRect();
+        const mid  = rect.top + rect.height / 2;
+        if (e.clientY < mid) {
+            list.insertBefore(dragging, over);
+        } else {
+            list.insertBefore(dragging, over.nextSibling);
+        }
+    });
+})();
+
+reassignZIndices();
+
 // ─── Editor: Blend Modes ──────────────────────────────────────────────────────
 const cardShine = document.getElementById('cardShine');
 const cardGlare = document.getElementById('cardGlare');
