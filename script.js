@@ -22,6 +22,11 @@ let state = {
     idleTimer:     null,
     gyroIdleTimer: null,
     _patternUrl:   null,
+    rafId:         null,
+    // pending values written once per RAF frame
+    pending: null,
+    // cached card rect — refreshed on resize/scroll
+    rect: null,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -29,7 +34,14 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 function round(v, p = 3)  { return parseFloat(v.toFixed(p)); }
 
 // ─── CSS var setter ───────────────────────────────────────────────────────────
-function set(prop, val) { card.style.setProperty(prop, val); }
+const style = card.style;
+function set(prop, val) { style.setProperty(prop, val); }
+
+// ─── Cache card rect (avoid getBoundingClientRect on every event) ─────────────
+function refreshRect() { state.rect = card.getBoundingClientRect(); }
+refreshRect();
+window.addEventListener('resize', refreshRect, { passive: true });
+window.addEventListener('scroll', refreshRect, { passive: true });
 
 // ─── img → data URL (works for both file:// and http://) ──────────────────────
 function imgToDataUrl(imgEl, callback) {
@@ -50,14 +62,12 @@ function imgToDataUrl(imgEl, callback) {
 
 // ─── Apply front mask ─────────────────────────────────────────────────────────
 function applyMask(url) {
-    // Uploaded file (already blob: or data:) — apply directly
     if (url) {
         maskOverlay.src = url;
         set('--mask', `url("${url}")`);
         card.classList.add('masked');
         return;
     }
-    // Init: maskOverlay already has src="./mask-front.png" set in HTML
     imgToDataUrl(maskOverlay, (dataUrl) => {
         set('--mask', `url("${dataUrl}")`);
         card.classList.add('masked');
@@ -71,47 +81,40 @@ function applyBackMask(url) {
         set('--back-mask', `url("${url}")`);
         return;
     }
-    // Init: backMask already has src="./mask-back.png" set in HTML
     imgToDataUrl(backMask, (dataUrl) => {
         set('--back-mask', `url("${dataUrl}")`);
     });
 }
 
-// ─── Core frame update — called directly on every pointer event ───────────────
+// ─── Core frame update — called once per RAF ──────────────────────────────────
 function applyCardState(rotX, rotY, glareX, glareY) {
-    // tilt (respects toggle)
     const cssRotX = state.tiltEnabled ? rotX : 0;
     const cssRotY = state.tiltEnabled ? rotY : 0;
     set('--rotate-x', `${round(cssRotX)}deg`);
     set('--rotate-y', `${round(cssRotY)}deg`);
 
-    // pointer position (0–100%)
     set('--pointer-x', `${round(glareX)}%`);
     set('--pointer-y', `${round(glareY)}%`);
 
-    // pointer-from-* (0–1)
     const fromLeft   = round(glareX / 100, 4);
     const fromTop    = round(glareY / 100, 4);
     const fromCenter = clamp(
-        round(Math.sqrt(Math.pow(fromLeft - 0.5, 2) + Math.pow(fromTop - 0.5, 2)) * Math.SQRT2, 4),
+        round(Math.sqrt((fromLeft - 0.5) ** 2 + (fromTop - 0.5) ** 2) * Math.SQRT2, 4),
         0, 1
     );
     set('--pointer-from-left',   fromLeft);
     set('--pointer-from-top',    fromTop);
     set('--pointer-from-center', fromCenter);
 
-    // background-x/y: rotY (horizontal tilt) shifts bg left/right, rotX shifts up/down
     const bgX = round(50 + (rotY / CONFIG.MAX_ROTATION) * 30);
     const bgY = round(50 - (rotX / CONFIG.MAX_ROTATION) * 30);
     set('--background-x', `${bgX}%`);
     set('--background-y', `${bgY}%`);
 
-    // card-opacity (based on distance from center)
     const dist     = Math.sqrt(rotX * rotX + rotY * rotY);
     const intensity = clamp(dist / CONFIG.MAX_ROTATION, 0, 1);
     set('--card-opacity', round(intensity, 3));
 
-    // pattern layer vars
     const rAngle = 135 + (rotY / CONFIG.MAX_ROTATION) * 30;
     const rPos   = 50  + (rotY / CONFIG.MAX_ROTATION) * 30;
     set('--rainbow-angle', `${round(rAngle)}deg`);
@@ -121,9 +124,21 @@ function applyCardState(rotX, rotY, glareX, glareY) {
     if (cardBackPattern) cardBackPattern.style.backgroundPosition = patBgPos;
 }
 
+// ─── RAF-throttled flush ──────────────────────────────────────────────────────
+function scheduleFrame(rotX, rotY, glareX, glareY) {
+    state.pending = { rotX, rotY, glareX, glareY };
+    if (!state.rafId) {
+        state.rafId = requestAnimationFrame(() => {
+            state.rafId = null;
+            const p = state.pending;
+            if (p) { state.pending = null; applyCardState(p.rotX, p.rotY, p.glareX, p.glareY); }
+        });
+    }
+}
+
 // ─── Reset to center ──────────────────────────────────────────────────────────
 function resetToCenter() {
-    applyCardState(0, 0, 50, 50);
+    scheduleFrame(0, 0, 50, 50);
 }
 
 // ─── Idle timer ───────────────────────────────────────────────────────────────
@@ -137,16 +152,14 @@ function resetIdleTimer() {
 
 // ─── Pointer Input ────────────────────────────────────────────────────────────
 function handlePointerMove(clientX, clientY) {
-    const rect  = card.getBoundingClientRect();
+    const rect  = state.rect;
     const normX = clamp((clientX - rect.left  - rect.width  / 2) / (rect.width  / 2), -1, 1);
     const normY = clamp((clientY - rect.top   - rect.height / 2) / (rect.height / 2), -1, 1);
-    // rotX drives rotateX (vertical tilt): cursor down → top tilts toward viewer (positive)
-    // rotY drives rotateY (horizontal tilt): cursor right → right edge toward viewer (positive)
-    const rotX =  normY * CONFIG.MAX_ROTATION;
-    const rotY =  normX * CONFIG.MAX_ROTATION;
+    const rotX  =  normY * CONFIG.MAX_ROTATION;
+    const rotY  =  normX * CONFIG.MAX_ROTATION;
     const glareX = clamp(((clientX - rect.left) / rect.width)  * 100, 0, 100);
     const glareY = clamp(((clientY - rect.top)  / rect.height) * 100, 0, 100);
-    applyCardState(rotX, rotY, glareX, glareY);
+    scheduleFrame(rotX, rotY, glareX, glareY);
     resetIdleTimer();
 }
 
@@ -161,7 +174,6 @@ document.addEventListener('mouseleave', () => {
 });
 
 document.addEventListener('touchmove', (e) => {
-    // Only hijack touch when not interacting with a button/select/input
     if (e.target.closest('button, select, input, label, .editor, .mobile-editor-drawer, .mobile-editor-overlay, .bottom-bar')) return;
     e.preventDefault();
     const t = e.touches[0];
@@ -183,15 +195,13 @@ cardRotator.addEventListener('click', () => {
 // ─── Device Orientation ───────────────────────────────────────────────────────
 function handleOrientation(e) {
     if (state.isHovering) return;
-    // gamma = left/right tilt → rotateY, beta = forward/back → rotateX
-    // scale down with GYRO_SCALE for reduced sensitivity
     const rawGamma = (e.gamma ?? 0) * CONFIG.GYRO_SCALE;
     const rawBeta  = ((e.beta  ?? 0) - 30) * CONFIG.GYRO_SCALE;
     const rotY = clamp(rawGamma, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
     const rotX = clamp(rawBeta,  -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
     const glareX = 50 + (rotY / CONFIG.MAX_ROTATION) * 40;
     const glareY = 50 + (rotX / CONFIG.MAX_ROTATION) * 40;
-    applyCardState(rotX, rotY, glareX, glareY);
+    scheduleFrame(rotX, rotY, glareX, glareY);
     if (state.gyroIdleTimer) clearTimeout(state.gyroIdleTimer);
     state.gyroIdleTimer = setTimeout(resetToCenter, CONFIG.IDLE_TIMEOUT);
 }
@@ -293,11 +303,10 @@ function reassignZIndices() {
 
 reassignZIndices();
 
-// ─── Editor: Blend Modes (defaults: mask=overlay, pattern=color-dodge, holo=color-dodge) ───
+// ─── Editor: Blend Modes ──────────────────────────────────────────────────────
 const cardShine = document.getElementById('cardShine');
 const cardGlare = document.getElementById('cardGlare');
 
-// Apply defaults on init
 maskOverlay.style.mixBlendMode = 'overlay';
 cardPattern.style.mixBlendMode = 'color-dodge';
 cardShine.style.mixBlendMode   = 'color-dodge';
@@ -365,16 +374,13 @@ setupUpload('uploadBack', 'nameBack', (url) => {
     const drawer  = document.getElementById('mobileEditorDrawer');
     const content = document.getElementById('mobileDrawerContent');
 
-    // Clone editor-body into drawer
     const editorBody = document.getElementById('editorBody');
     const clone = editorBody.cloneNode(true);
-    // Give cloned elements unique IDs to avoid conflicts (prefix with 'm-')
     clone.querySelectorAll('[id]').forEach(el => {
         el.id = 'm-' + el.id;
     });
     content.appendChild(clone);
 
-    // Sync cloned blend selects with originals
     function syncSelects() {
         ['blendMask', 'blendPattern', 'blendHolo'].forEach(id => {
             const orig   = document.getElementById(id);
@@ -383,7 +389,6 @@ setupUpload('uploadBack', 'nameBack', (url) => {
         });
     }
 
-    // Bind cloned blend selects
     const mBlendMask    = document.getElementById('m-blendMask');
     const mBlendPattern = document.getElementById('m-blendPattern');
     const mBlendHolo    = document.getElementById('m-blendHolo');
@@ -420,7 +425,6 @@ setupUpload('uploadBack', 'nameBack', (url) => {
 })();
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-// Pass no URL — reads from the <img> elements already in HTML (src set there)
 applyMask();
 applyBackMask();
 resetToCenter();
