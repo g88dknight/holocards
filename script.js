@@ -4,25 +4,17 @@ const cardRotator = document.getElementById('cardRotator');
 const cardImage   = document.getElementById('cardImage');
 const cardPattern = document.getElementById('cardPattern');
 const maskOverlay = document.getElementById('cardMaskOverlay');
+const tiltToggle  = document.getElementById('tiltToggle');
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 const CONFIG = {
     MAX_ROTATION: 18,
     IDLE_TIMEOUT: 3000,
-    SMOOTHING:    0.12,
-    SPRING_BACK:  0.08,
 };
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let state = {
-    targetRotX:  0,
-    targetRotY:  0,
-    currentRotX: 0,
-    currentRotY: 0,
-    targetGlareX:  50,
-    targetGlareY:  50,
-    currentGlareX: 50,
-    currentGlareY: 50,
+    tiltEnabled:   true,
     isHovering:    false,
     idleTimer:     null,
     gyroIdleTimer: null,
@@ -30,9 +22,8 @@ let state = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function lerp(a, b, t) { return a + (b - a) * t; }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-function round(v, p = 3) { return parseFloat(v.toFixed(p)); }
+function round(v, p = 3)  { return parseFloat(v.toFixed(p)); }
 
 // ─── CSS var setter ───────────────────────────────────────────────────────────
 function set(prop, val) { card.style.setProperty(prop, val); }
@@ -45,51 +36,41 @@ function applyMask(url) {
     card.classList.add('masked');
 }
 
-// ─── Apply pattern texture ────────────────────────────────────────────────────
-function buildPatternBg(angle, pos) {
-    const tex = state._patternUrl || 'url("./pattern.png")';
-    return `repeating-linear-gradient(calc(${angle} + 45deg),
-        hsla(270,100%,70%,0.12) 0%,hsla(300,100%,70%,0.12) 4%,
-        hsla(330,100%,70%,0.12) 8%,hsla(0,100%,70%,0.12) 12%,
-        hsla(30,100%,70%,0.12) 16%,hsla(60,100%,70%,0.12) 20%,
-        hsla(90,100%,70%,0.12) 24%,hsla(120,100%,70%,0.12) 28%,
-        hsla(150,100%,70%,0.12) 32%,hsla(180,100%,70%,0.12) 36%,
-        hsla(210,100%,70%,0.12) 40%,hsla(240,100%,70%,0.12) 44%,
-        hsla(270,100%,70%,0.12) 48%,transparent 52%,transparent 100%),
-        ${tex}`;
-}
+// ─── Core frame update — called directly on every pointer event ───────────────
+function applyCardState(rotX, rotY, glareX, glareY) {
+    // tilt (respects toggle)
+    const cssRotX = state.tiltEnabled ? rotX : 0;
+    const cssRotY = state.tiltEnabled ? rotY : 0;
+    set('--rotate-x', `${round(cssRotX)}deg`);
+    set('--rotate-y', `${round(cssRotY)}deg`);
 
-// ─── Core frame update ────────────────────────────────────────────────────────
-function applyCardState(rotX, rotY, glareX, glareY, intensity) {
-    // tilt
-    set('--rotate-x', `${round(rotX)}deg`);
-    set('--rotate-y', `${round(rotY)}deg`);
-
-    // pointer position (0–100%) — pokemon-css naming
+    // pointer position (0–100%)
     set('--pointer-x', `${round(glareX)}%`);
     set('--pointer-y', `${round(glareY)}%`);
 
-    // pointer-from-* (0–1) — used by cosmos, rainbow, reverse, vstar
+    // pointer-from-* (0–1)
     const fromLeft   = round(glareX / 100, 4);
     const fromTop    = round(glareY / 100, 4);
-    const fromCenter = round(
-        Math.sqrt(Math.pow(fromLeft - 0.5, 2) + Math.pow(fromTop - 0.5, 2)) * Math.SQRT2,
-        4
+    const fromCenter = clamp(
+        round(Math.sqrt(Math.pow(fromLeft - 0.5, 2) + Math.pow(fromTop - 0.5, 2)) * Math.SQRT2, 4),
+        0, 1
     );
     set('--pointer-from-left',   fromLeft);
     set('--pointer-from-top',    fromTop);
-    set('--pointer-from-center', clamp(fromCenter, 0, 1));
+    set('--pointer-from-center', fromCenter);
 
-    // background-x/y (50% ± offset) — used by holo, vstar
+    // background-x/y
     const bgX = round(50 + (rotY / CONFIG.MAX_ROTATION) * 30);
     const bgY = round(50 - (rotX / CONFIG.MAX_ROTATION) * 30);
     set('--background-x', `${bgX}%`);
     set('--background-y', `${bgY}%`);
 
-    // card-opacity — gates shine/glare intensity
+    // card-opacity (based on distance from center)
+    const dist     = Math.sqrt(rotX * rotX + rotY * rotY);
+    const intensity = clamp(dist / CONFIG.MAX_ROTATION, 0, 1);
     set('--card-opacity', round(intensity, 3));
 
-    // pattern (rainbow) vars — used by card-pattern layer
+    // pattern layer vars
     const rAngle = 135 + (rotY / CONFIG.MAX_ROTATION) * 30;
     const rPos   = 50  + (rotY / CONFIG.MAX_ROTATION) * 30;
     set('--rainbow-angle', `${round(rAngle)}deg`);
@@ -98,39 +79,18 @@ function applyCardState(rotX, rotY, glareX, glareY, intensity) {
         `calc(${round(rPos)}% + 10%) calc(${round(rPos)}% + 10%), center`;
 }
 
-// ─── Animation Loop ───────────────────────────────────────────────────────────
-function tick() {
-    const t = state.isHovering ? CONFIG.SMOOTHING : CONFIG.SPRING_BACK;
-
-    state.currentRotX   = lerp(state.currentRotX,   state.targetRotX,   t);
-    state.currentRotY   = lerp(state.currentRotY,   state.targetRotY,   t);
-    state.currentGlareX = lerp(state.currentGlareX, state.targetGlareX, t);
-    state.currentGlareY = lerp(state.currentGlareY, state.targetGlareY, t);
-
-    const dist      = Math.sqrt(state.currentRotX ** 2 + state.currentRotY ** 2);
-    const intensity = clamp(dist / CONFIG.MAX_ROTATION, 0, 1);
-
-    applyCardState(
-        state.currentRotX, state.currentRotY,
-        state.currentGlareX, state.currentGlareY,
-        intensity
-    );
-
-    requestAnimationFrame(tick);
+// ─── Reset to center ──────────────────────────────────────────────────────────
+function resetToCenter() {
+    applyCardState(0, 0, 50, 50);
 }
 
-// ─── Idle / spring-back ───────────────────────────────────────────────────────
+// ─── Idle timer ───────────────────────────────────────────────────────────────
 function resetIdleTimer() {
     if (state.idleTimer) clearTimeout(state.idleTimer);
-    state.idleTimer = setTimeout(returnToCenter, CONFIG.IDLE_TIMEOUT);
-}
-
-function returnToCenter() {
-    state.isHovering   = false;
-    state.targetRotX   = 0;
-    state.targetRotY   = 0;
-    state.targetGlareX = 50;
-    state.targetGlareY = 50;
+    state.idleTimer = setTimeout(() => {
+        state.isHovering = false;
+        resetToCenter();
+    }, CONFIG.IDLE_TIMEOUT);
 }
 
 // ─── Pointer Input ────────────────────────────────────────────────────────────
@@ -138,10 +98,11 @@ function handlePointerMove(clientX, clientY) {
     const rect  = card.getBoundingClientRect();
     const normX = clamp((clientX - rect.left  - rect.width  / 2) / (rect.width  / 2), -1, 1);
     const normY = clamp((clientY - rect.top   - rect.height / 2) / (rect.height / 2), -1, 1);
-    state.targetRotY   =  normX * CONFIG.MAX_ROTATION;
-    state.targetRotX   = -normY * CONFIG.MAX_ROTATION;
-    state.targetGlareX = clamp(((clientX - rect.left) / rect.width)  * 100, 0, 100);
-    state.targetGlareY = clamp(((clientY - rect.top)  / rect.height) * 100, 0, 100);
+    const rotY   =  normX * CONFIG.MAX_ROTATION;
+    const rotX   = -normY * CONFIG.MAX_ROTATION;
+    const glareX = clamp(((clientX - rect.left) / rect.width)  * 100, 0, 100);
+    const glareY = clamp(((clientY - rect.top)  / rect.height) * 100, 0, 100);
+    applyCardState(rotX, rotY, glareX, glareY);
     resetIdleTimer();
 }
 
@@ -152,7 +113,7 @@ document.addEventListener('mousemove', (e) => {
 
 document.addEventListener('mouseleave', () => {
     state.isHovering = false;
-    returnToCenter();
+    resetToCenter();
 });
 
 document.addEventListener('touchmove', (e) => {
@@ -164,7 +125,7 @@ document.addEventListener('touchmove', (e) => {
 
 document.addEventListener('touchend', () => {
     state.isHovering = false;
-    returnToCenter();
+    resetToCenter();
 });
 
 // ─── Card Flip on Click ───────────────────────────────────────────────────────
@@ -175,14 +136,13 @@ cardRotator.addEventListener('click', () => {
 // ─── Device Orientation ───────────────────────────────────────────────────────
 function handleOrientation(e) {
     if (state.isHovering) return;
-    const rotY = clamp(e.gamma ?? 0, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
-    const rotX = clamp((e.beta  ?? 0) - 30, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
-    state.targetRotY   = rotY;
-    state.targetRotX   = -rotX;
-    state.targetGlareX = 50 + (rotY / CONFIG.MAX_ROTATION) * 40;
-    state.targetGlareY = 50 - (rotX / CONFIG.MAX_ROTATION) * 40;
+    const rotY  = clamp(e.gamma ?? 0, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
+    const rotX  = clamp((e.beta ?? 0) - 30, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
+    const glareX = 50 + (rotY / CONFIG.MAX_ROTATION) * 40;
+    const glareY = 50 - (rotX / CONFIG.MAX_ROTATION) * 40;
+    applyCardState(-rotX, rotY, glareX, glareY);
     if (state.gyroIdleTimer) clearTimeout(state.gyroIdleTimer);
-    state.gyroIdleTimer = setTimeout(returnToCenter, CONFIG.IDLE_TIMEOUT);
+    state.gyroIdleTimer = setTimeout(resetToCenter, CONFIG.IDLE_TIMEOUT);
 }
 
 function setupDeviceOrientation() {
@@ -211,6 +171,14 @@ if (typeof DeviceOrientationEvent !== 'undefined') {
 // ─── Editor: Collapse ─────────────────────────────────────────────────────────
 document.querySelector('.editor-header').addEventListener('click', () => {
     document.getElementById('editor').classList.toggle('collapsed');
+});
+
+// ─── Editor: Tilt Toggle ──────────────────────────────────────────────────────
+tiltToggle.addEventListener('click', () => {
+    state.tiltEnabled = !state.tiltEnabled;
+    tiltToggle.classList.toggle('active', state.tiltEnabled);
+    tiltToggle.querySelector('.toggle-text').textContent = state.tiltEnabled ? 'on' : 'off';
+    if (!state.tiltEnabled) resetToCenter();
 });
 
 // ─── Editor: Holo Type Switcher ───────────────────────────────────────────────
@@ -264,4 +232,4 @@ setupUpload('uploadBack', 'nameBack', (url) => {
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 applyMask('./mask.png');
-tick();
+resetToCenter();
