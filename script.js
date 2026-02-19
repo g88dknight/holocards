@@ -190,6 +190,21 @@ document.querySelectorAll('.holo-btn').forEach(btn => {
     });
 });
 
+// ─── Editor: Blend Modes ──────────────────────────────────────────────────────
+const cardShine = document.getElementById('cardShine');
+const cardGlare = document.getElementById('cardGlare');
+
+document.getElementById('blendMask').addEventListener('change', (e) => {
+    maskOverlay.style.mixBlendMode = e.target.value;
+});
+document.getElementById('blendPattern').addEventListener('change', (e) => {
+    cardPattern.style.mixBlendMode = e.target.value;
+});
+document.getElementById('blendHolo').addEventListener('change', (e) => {
+    cardShine.style.mixBlendMode = e.target.value;
+    cardGlare.style.mixBlendMode = e.target.value;
+});
+
 // ─── Editor: File Uploads ─────────────────────────────────────────────────────
 function setupUpload(inputId, nameId, onLoad) {
     const input  = document.getElementById(inputId);
