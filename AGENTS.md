@@ -71,7 +71,7 @@ holocards/
 
 ### Card Flip
 - Click `.card__rotator` → toggles `.card.flipped`
-- `.card.flipped .card__rotator` adds 180deg to `--rotate-x` (Y-axis flip)
+- `.card.flipped .card__rotator` adds 180deg to `--rotate-y` (Y-axis flip): `rotateX(--rotate-x) rotateY(--rotate-y + 180deg)`
 - Transition: `0.6s cubic-bezier(0.23, 1, 0.32, 1)`
 
 ### Holo Variants (data-rarity attribute)
@@ -99,11 +99,11 @@ holocards/
 | `--glittersize` | Glitter tile size (200px) |
 
 ### JavaScript Architecture
-- **`tick()`** — requestAnimationFrame loop with lerp smoothing (`SMOOTHING: 0.12` hover, `SPRING_BACK: 0.08` idle)
-- **`applyCardState(rotX, rotY, glareX, glareY)`** — sets all CSS custom properties each frame from lerp'd values
-- **`handlePointerMove()`** — normalizes cursor to card-relative coords, sets `state.targetRot*` / `state.targetGlare*`
-- **`resetToCenter()`** — sets targets to 0/50 (tick lerps back smoothly)
-- **`applyMask(url)`** — canvas `toDataURL()` trick to apply mask-image from repo files (works on `file://` and `http://`)
+- **`applyCardState(rotX, rotY, glareX, glareY)`** — sets all CSS custom properties each frame; `rotX`→`--rotate-x` (rotateX), `rotY`→`--rotate-y` (rotateY)
+- **`handlePointerMove()`** — cursor right → rotY positive (card tilts right toward viewer); cursor down → rotX positive
+- **`resetToCenter()`** — sets all to 0/50
+- **`CONFIG.MAX_ROTATION: 6`** — tilt intensity (degrees); **`CONFIG.GYRO_SCALE: 0.4`** — gyroscope sensitivity multiplier
+- **`applyMask(url)`** — canvas `toDataURL()` trick to apply mask-image (works on `file://` and `http://`)
 - **`applyBackMask(url)`** — same for back face mask (currently not rendered since back holo is disabled)
 - Card flip on click, gyroscope on mobile, iOS permission request
 - `touchmove`/`touchend` skip buttons/controls to avoid blocking mobile taps
@@ -118,13 +118,15 @@ holocards/
 - Tilt toggle: fixed bottom bar, shared between desktop and mobile
 
 ### Mobile Layout
-- Header (52px fixed top), card centered in remaining space, bottom bar fixed
-- `body` on mobile: `padding-top:52px; padding-bottom:100px; flex-direction:column; justify-content:flex-start`
+- Header (52px fixed top, transparent, no border), card centered in remaining space, bottom bar fixed
+- `body` on mobile: `padding-top:52px; padding-bottom:110px; flex-direction:column; justify-content:flex-start`
 - `.card-container` has `flex:1` to fill available height, centers card inside
-- Card scales via CSS vars: `--card-width: min(280px, 78vw)`
-- Bottom bar stacks vertically (tilt row + holo 6-column row)
+- Card scales via CSS vars: `--card-width: min(380px, 90vw)` (almost full screen)
+- Bottom bar transparent (no fill/border), stacks vertically (tilt row + holo 6-column row), buttons larger
 - `mobile-editor-overlay`: `pointer-events:none` when inactive to not block taps
-- Holo gradient coarseness fix: mobile `@media` overrides `background-size` to scale up gradients
+- Holo gradient coarseness fix: mobile `@media` overrides `background-size`, `--space`, `--glittersize` per variant
+  - Cosmos/V-Star: much finer stripes (`--space: 2–2.5%`, larger `background-size` scale)
+  - Rainbow/Amazing: smaller glitter tiles (`--glittersize: 80px`), softer glare
 
 ---
 

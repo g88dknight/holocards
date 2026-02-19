@@ -10,7 +10,8 @@ const tiltToggle      = document.getElementById('tiltToggle');
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 const CONFIG = {
-    MAX_ROTATION: 12,
+    MAX_ROTATION: 6,
+    GYRO_SCALE: 0.4,
     IDLE_TIMEOUT: 3000,
 };
 
@@ -99,7 +100,7 @@ function applyCardState(rotX, rotY, glareX, glareY) {
     set('--pointer-from-top',    fromTop);
     set('--pointer-from-center', fromCenter);
 
-    // background-x/y
+    // background-x/y: rotY (horizontal tilt) shifts bg left/right, rotX shifts up/down
     const bgX = round(50 + (rotY / CONFIG.MAX_ROTATION) * 30);
     const bgY = round(50 - (rotX / CONFIG.MAX_ROTATION) * 30);
     set('--background-x', `${bgX}%`);
@@ -139,8 +140,10 @@ function handlePointerMove(clientX, clientY) {
     const rect  = card.getBoundingClientRect();
     const normX = clamp((clientX - rect.left  - rect.width  / 2) / (rect.width  / 2), -1, 1);
     const normY = clamp((clientY - rect.top   - rect.height / 2) / (rect.height / 2), -1, 1);
-    const rotY   =  normX * CONFIG.MAX_ROTATION;
-    const rotX   = -normY * CONFIG.MAX_ROTATION;
+    // rotX drives rotateX (vertical tilt): cursor down → top tilts toward viewer (positive)
+    // rotY drives rotateY (horizontal tilt): cursor right → right edge toward viewer (positive)
+    const rotX =  normY * CONFIG.MAX_ROTATION;
+    const rotY =  normX * CONFIG.MAX_ROTATION;
     const glareX = clamp(((clientX - rect.left) / rect.width)  * 100, 0, 100);
     const glareY = clamp(((clientY - rect.top)  / rect.height) * 100, 0, 100);
     applyCardState(rotX, rotY, glareX, glareY);
@@ -180,11 +183,15 @@ cardRotator.addEventListener('click', () => {
 // ─── Device Orientation ───────────────────────────────────────────────────────
 function handleOrientation(e) {
     if (state.isHovering) return;
-    const rotY  = clamp(e.gamma ?? 0, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
-    const rotX  = clamp((e.beta ?? 0) - 30, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
+    // gamma = left/right tilt → rotateY, beta = forward/back → rotateX
+    // scale down with GYRO_SCALE for reduced sensitivity
+    const rawGamma = (e.gamma ?? 0) * CONFIG.GYRO_SCALE;
+    const rawBeta  = ((e.beta  ?? 0) - 30) * CONFIG.GYRO_SCALE;
+    const rotY = clamp(rawGamma, -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
+    const rotX = clamp(rawBeta,  -CONFIG.MAX_ROTATION, CONFIG.MAX_ROTATION);
     const glareX = 50 + (rotY / CONFIG.MAX_ROTATION) * 40;
-    const glareY = 50 - (rotX / CONFIG.MAX_ROTATION) * 40;
-    applyCardState(-rotX, rotY, glareX, glareY);
+    const glareY = 50 + (rotX / CONFIG.MAX_ROTATION) * 40;
+    applyCardState(rotX, rotY, glareX, glareY);
     if (state.gyroIdleTimer) clearTimeout(state.gyroIdleTimer);
     state.gyroIdleTimer = setTimeout(resetToCenter, CONFIG.IDLE_TIMEOUT);
 }
